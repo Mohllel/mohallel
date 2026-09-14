@@ -1,0 +1,120 @@
+@import "tailwindcss";
+@import "@fontsource/tajawal/400.css";
+@import "@fontsource/tajawal/500.css";
+@import "@fontsource/tajawal/700.css";
+@import "@fontsource/tajawal/800.css";
+@import "@fontsource/tajawal/900.css";
+
+@theme {
+  --font-sans: "Tajawal", sans-serif;
+
+  /* Brand identity */
+  --color-pri: #0ea5e9;
+  --color-pri-glow: rgb(14 165 233 / 25%);
+  --color-sec: #f97316;
+  --color-bg: #060b18;
+  --color-ok: #10b981;
+  --color-err: #ef4444;
+  --color-warn: #eab308;
+
+  /* Surfaces (dark scale, from the reference prototype) */
+  --color-s1: #0c1425;
+  --color-s2: #121e36;
+  --color-s3: #192847;
+  --color-bd: #1c2d50;
+  --color-bl: #253a63;
+
+  /* Text */
+  --color-t1: #f0f4f8;
+  --color-t2: #94a3b8;
+  --color-t3: #4b5e80;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  background: var(--color-bg);
+  color: var(--color-t1);
+  overscroll-behavior-y: none;
+}
+
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+#root {
+  max-width: 720px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  position: relative;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scoreFlash {
+  0% {
+    opacity: 0.65;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes cellFlash {
+  0% {
+    background: var(--color-ok);
+    transform: scale(1.08);
+  }
+  100% {
+    background: var(--color-s1);
+    transform: scale(1);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+button:active {
+  transform: scale(0.97);
+}
+
+input,
+textarea,
+select {
+  font-family: inherit;
+}
