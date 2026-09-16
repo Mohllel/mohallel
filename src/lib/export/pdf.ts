@@ -2,7 +2,7 @@ import { toPng } from 'html-to-image'
 import { jsPDF } from 'jspdf'
 
 export async function downloadElementAsPng(el: HTMLElement, filename: string) {
-  const dataUrl = await toPng(el, { pixelRatio: 2, backgroundColor: '#060b18' })
+  const dataUrl = await toPng(el, { pixelRatio: 2, backgroundColor: '#e8eaed' })
   const a = document.createElement('a')
   a.href = dataUrl
   a.download = filename
@@ -27,7 +27,7 @@ export async function buildAndDownloadReportPdf({ coverEl, playerEls, filename }
   const margin = 28
 
   const drawPage = async (el: HTMLElement, pageNo: number, totalPages: number) => {
-    const dataUrl = await toPng(el, { pixelRatio: 2, backgroundColor: '#060b18' })
+    const dataUrl = await toPng(el, { pixelRatio: 2, backgroundColor: '#e8eaed' })
     const imgW = el.offsetWidth
     const imgH = el.offsetHeight
     const maxW = pageWidth - margin * 2
@@ -37,7 +37,7 @@ export async function buildAndDownloadReportPdf({ coverEl, playerEls, filename }
     const drawH = imgH * scale
     const x = (pageWidth - drawW) / 2
 
-    pdf.setDrawColor(37, 58, 99)
+    pdf.setDrawColor(37, 99, 235)
     pdf.setLineWidth(1)
     pdf.roundedRect(margin / 2, margin / 2, pageWidth - margin, pageHeight - margin, 8, 8)
 

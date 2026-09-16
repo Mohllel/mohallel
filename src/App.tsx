@@ -4,6 +4,7 @@ import { useClubStore } from './store/useClubStore'
 import { TabLayout } from './components/layout/TabLayout'
 import { HomeScreen } from './components/home/HomeScreen'
 import { SetupScreen } from './components/setup/SetupScreen'
+import { StartScheduledMatchScreen } from './components/setup/StartScheduledMatchScreen'
 import { LiveScreen } from './components/live/LiveScreen'
 import { ReportScreen } from './components/report/ReportScreen'
 import { ReportsListScreen } from './components/reports/ReportsListScreen'
@@ -37,6 +38,7 @@ function App() {
         <Route path="/training" element={<TrainingListScreen />} />
       </Route>
       <Route path="/match/new" element={<SetupScreen />} />
+      <Route path="/match/:id/start" element={<StartScheduledMatchScreen />} />
       <Route path="/match/:id/live" element={<LiveScreen />} />
       <Route path="/match/:id/report" element={<ReportScreen />} />
       <Route path="/scouting/:presetId" element={<ScoutingReportScreen />} />

@@ -8,6 +8,9 @@ const initialState: ClubProfile = {
   userName: '',
   clubName: '',
   clubLogo: null,
+  jerseyPhoto: null,
+  headerImage: null,
+  bio: '',
   colors: { pri: '#0ea5e9', sec: '#f97316' },
   isPro: false,
   players: [],
@@ -19,6 +22,9 @@ interface ClubActions {
   setUserName: (name: string) => void
   setClubName: (name: string) => void
   setClubLogo: (logo: string | null) => void
+  setJerseyPhoto: (photo: string | null) => void
+  setHeaderImage: (image: string | null) => void
+  setBio: (bio: string) => void
   setColors: (colors: { pri: string; sec: string }) => void
   toggleIsPro: () => void
 
@@ -26,6 +32,8 @@ interface ClubActions {
   removePlayer: (id: string) => void
   setPlayerPhoto: (id: string, photo: string) => void
   setPlayerNumber: (id: string, number: number | undefined) => void
+  setPlayerPosition: (id: string, position: Player['position']) => void
+  setPlayerBio: (id: string, bio: string) => void
 
   addOpponentPreset: (name: string, logo?: string | null) => string
   removeOpponentPreset: (id: string) => void
@@ -37,6 +45,27 @@ interface ClubActions {
 
 type Store = ClubProfile & ClubActions
 
+/** يُحوّل مسميات المراكز القديمة (طرفي/معاكس/وسط) إلى نظام الترقيم الجديد (٤/٣/٢) بلا فقد بيانات */
+const OLD_POSITION_MAP: Record<string, string> = { outside: 'hitter4', middle: 'hitter3', opposite: 'hitter2' }
+
+function migrateClubState(persisted: unknown): Store {
+  const state = persisted as Store
+  const remapPlayers = (players: Player[] | undefined) =>
+    (players ?? []).map((p) =>
+      p.position && p.position in OLD_POSITION_MAP
+        ? { ...p, position: OLD_POSITION_MAP[p.position] as Player['position'] }
+        : p,
+    )
+
+  return {
+    ...state,
+    players: remapPlayers(state.players),
+    opponentRosters: Object.fromEntries(
+      Object.entries(state.opponentRosters ?? {}).map(([id, roster]) => [id, remapPlayers(roster)]),
+    ),
+  }
+}
+
 export const useClubStore = create<Store>()(
   persist(
     (set) => ({
@@ -45,6 +74,9 @@ export const useClubStore = create<Store>()(
       setUserName: (userName) => set({ userName }),
       setClubName: (clubName) => set({ clubName }),
       setClubLogo: (clubLogo) => set({ clubLogo }),
+      setJerseyPhoto: (jerseyPhoto) => set({ jerseyPhoto }),
+      setHeaderImage: (headerImage) => set({ headerImage }),
+      setBio: (bio) => set({ bio }),
       setColors: (colors) => set({ colors }),
       toggleIsPro: () => set((st) => ({ isPro: !st.isPro })),
 
@@ -57,6 +89,10 @@ export const useClubStore = create<Store>()(
         set((st) => ({ players: st.players.map((p) => (p.id === id ? { ...p, photo } : p)) })),
       setPlayerNumber: (id, number) =>
         set((st) => ({ players: st.players.map((p) => (p.id === id ? { ...p, number } : p)) })),
+      setPlayerPosition: (id, position) =>
+        set((st) => ({ players: st.players.map((p) => (p.id === id ? { ...p, position } : p)) })),
+      setPlayerBio: (id, bio) =>
+        set((st) => ({ players: st.players.map((p) => (p.id === id ? { ...p, bio } : p)) })),
 
       addOpponentPreset: (name, logo = null) => {
         const id = uid()
@@ -89,7 +125,11 @@ export const useClubStore = create<Store>()(
           }
         }),
     }),
-    { name: 'mohallel-club' },
+    {
+      name: 'mohallel-club',
+      version: 1,
+      migrate: (persisted) => migrateClubState(persisted),
+    },
   ),
 )
 

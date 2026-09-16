@@ -9,25 +9,32 @@
   --font-sans: "Tajawal", sans-serif;
 
   /* Brand identity */
-  --color-pri: #0ea5e9;
-  --color-pri-glow: rgb(14 165 233 / 25%);
+  --color-pri: #2563eb;
+  --color-pri-glow: rgb(37 99 235 / 22%);
   --color-sec: #f97316;
-  --color-bg: #060b18;
-  --color-ok: #10b981;
-  --color-err: #ef4444;
-  --color-warn: #eab308;
+  --color-bg: #e8eaed;
+  --color-ok: #059669;
+  --color-err: #dc2626;
+  --color-warn: #b45309;
 
-  /* Surfaces (dark scale, from the reference prototype) */
-  --color-s1: #0c1425;
-  --color-s2: #121e36;
-  --color-s3: #192847;
-  --color-bd: #1c2d50;
-  --color-bl: #253a63;
+  /* Surfaces (light gray scale) */
+  --color-s1: #ffffff;
+  --color-s2: #eef0f2;
+  --color-s3: #e1e4e8;
+  --color-bd: #dbdfe4;
+  --color-bl: #c7cdd4;
 
   /* Text */
-  --color-t1: #f0f4f8;
-  --color-t2: #94a3b8;
-  --color-t3: #4b5e80;
+  --color-t1: #1a2230;
+  --color-t2: #5b6472;
+  --color-t3: #97a1ae;
+
+  /* Athletic look: true rectangles, no rounding */
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
 }
 
 * {

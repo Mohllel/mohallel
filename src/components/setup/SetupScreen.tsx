@@ -98,22 +98,29 @@ export function SetupScreen() {
             لا يوجد لاعبون في ملف النادي بعد. أضفهم من الإعدادات أولاً.
           </p>
         ) : (
-          players.map((p) => (
-            <label
-              key={p.id}
-              className="flex items-center gap-2.5 bg-bg border border-bd rounded-xl px-2.5 py-2 mb-1.5 cursor-pointer"
-            >
-              <input
-                type="checkbox"
-                checked={selectedPlayers.has(p.id)}
-                onChange={() => togglePlayer(p.id)}
-                className="w-4 h-4"
-              />
-              <Avatar name={p.name} photo={p.photo} size={28} />
-              <span className="flex-1 text-[13px] font-bold">{p.name}</span>
-              {p.number != null && <span className="text-[11px] text-t3">#{p.number}</span>}
-            </label>
-          ))
+          <div className="grid grid-cols-3 gap-2">
+            {players.map((p) => {
+              const selected = selectedPlayers.has(p.id)
+              return (
+                <label
+                  key={p.id}
+                  className={`flex flex-col items-center gap-1.5 border rounded-xl px-2 pt-3 pb-2 cursor-pointer ${
+                    selected ? 'bg-pri/10 border-pri' : 'bg-bg border-bd opacity-50'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selected}
+                    onChange={() => togglePlayer(p.id)}
+                    className="hidden"
+                  />
+                  <Avatar name={p.name} photo={p.photo} size={56} />
+                  <span className="text-[12px] font-bold text-center leading-tight line-clamp-2">{p.name}</span>
+                  {p.number != null && <span className="text-[10px] text-t3">#{p.number}</span>}
+                </label>
+              )
+            })}
+          </div>
         )}
       </div>
 

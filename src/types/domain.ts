@@ -10,6 +10,8 @@ export type RotationPosition = 1 | 2 | 3 | 4 | 5 | 6
 
 export type TeamSide = 'A' | 'B'
 
+export type PlayerPosition = 'setter' | 'hitter4' | 'hitter3' | 'hitter2' | 'libero'
+
 export interface Player {
   id: string
   name: string
@@ -17,6 +19,9 @@ export interface Player {
   photo?: string | null
   /** 'A' = لاعب النادي، 'B' = لاعب ضمن روستر منافس محفوظ (ميزة Pro) */
   teamSide: TeamSide
+  position?: PlayerPosition
+  /** نبذة قصيرة عن اللاعب */
+  bio?: string
 }
 
 export interface Action {
@@ -61,7 +66,7 @@ export interface MatchEvent {
 
 export type LiveMode = 'grid' | 'quick' | 'court'
 export type ReportView = 'overview' | 'player' | 'video'
-export type MatchStatus = 'live' | 'finished'
+export type MatchStatus = 'scheduled' | 'live' | 'finished'
 
 export interface TrainingSession {
   id: string
@@ -88,6 +93,12 @@ export interface ClubProfile {
   userName: string
   clubName: string
   clubLogo: string | null
+  /** صورة مرجعية للزي الرسمي — تُستخدم لتوليد صور اللاعبين بالذكاء الاصطناعي */
+  jerseyPhoto: string | null
+  /** صورة الغلاف الكبيرة أعلى الصفحة الرئيسية — قابلة للتغيير من الإعدادات */
+  headerImage: string | null
+  /** نبذة قصيرة عن النادي أو الفئة */
+  bio: string
   colors: ClubColors
   /** مفتاح تطوير محلي — بلا بوابة دفع حقيقية بعد */
   isPro: boolean

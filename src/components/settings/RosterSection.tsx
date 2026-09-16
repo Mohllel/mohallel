@@ -3,7 +3,8 @@ import { useClubStore } from '../../store/useClubStore'
 import { PlayerChip } from '../setup/PlayerChip'
 
 export function RosterSection() {
-  const { players, addPlayer, removePlayer, setPlayerPhoto, setPlayerNumber } = useClubStore()
+  const { players, addPlayer, removePlayer, setPlayerPhoto, setPlayerNumber, setPlayerPosition, setPlayerBio } =
+    useClubStore()
   const [name, setName] = useState('')
   const [number, setNumber] = useState('')
 
@@ -18,15 +19,19 @@ export function RosterSection() {
   return (
     <div className="bg-s1 border border-bd rounded-2xl p-4 mb-3">
       <div className="text-[14px] font-extrabold mb-3">👥 لاعبو الفريق ({players.length})</div>
-      {players.map((p) => (
-        <PlayerChip
-          key={p.id}
-          player={p}
-          onRemove={() => removePlayer(p.id)}
-          onPhoto={(d) => setPlayerPhoto(p.id, d)}
-          onNumberChange={(n) => setPlayerNumber(p.id, n)}
-        />
-      ))}
+      <div className="grid grid-cols-3 gap-2 mb-2">
+        {players.map((p) => (
+          <PlayerChip
+            key={p.id}
+            player={p}
+            onRemove={() => removePlayer(p.id)}
+            onPhoto={(d) => setPlayerPhoto(p.id, d)}
+            onNumberChange={(n) => setPlayerNumber(p.id, n)}
+            onPositionChange={(pos) => setPlayerPosition(p.id, pos)}
+            onBioChange={(bio) => setPlayerBio(p.id, bio)}
+          />
+        ))}
+      </div>
       <div className="flex gap-1.5 mt-2">
         <input
           value={number}

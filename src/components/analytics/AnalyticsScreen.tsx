@@ -11,7 +11,9 @@ import { PlayerTrendSection } from './PlayerTrendSection'
 export function AnalyticsScreen() {
   const { players, isPro, opponentRosters } = useClubStore()
   const { matches } = useMatchesStore()
-  const list = Object.values(matches).sort((a, b) => b.createdAt - a.createdAt)
+  const list = Object.values(matches)
+    .filter((m) => m.status !== 'scheduled')
+    .sort((a, b) => b.createdAt - a.createdAt)
   const [selected, setSelected] = useState<'all' | string>('all')
 
   const actions = useMemo(() => {

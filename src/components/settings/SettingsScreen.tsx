@@ -1,11 +1,28 @@
 import { useClubStore } from '../../store/useClubStore'
 import { LogoUpload } from '../shared/LogoUpload'
+import { HeaderImageUpload } from '../shared/HeaderImageUpload'
 import { OpponentsSection } from './OpponentsSection'
 import { RosterSection } from './RosterSection'
 
 export function SettingsScreen() {
-  const { userName, clubName, clubLogo, colors, isPro, setUserName, setClubName, setClubLogo, setColors, toggleIsPro } =
-    useClubStore()
+  const {
+    userName,
+    clubName,
+    clubLogo,
+    jerseyPhoto,
+    headerImage,
+    bio,
+    colors,
+    isPro,
+    setUserName,
+    setClubName,
+    setClubLogo,
+    setJerseyPhoto,
+    setHeaderImage,
+    setBio,
+    setColors,
+    toggleIsPro,
+  } = useClubStore()
 
   return (
     <div className="p-4 animate-[fadeIn_.3s_ease]">
@@ -16,12 +33,34 @@ export function SettingsScreen() {
         <label className="block text-[11px] text-t2 mb-1 font-bold">اسم المستخدم</label>
         <input value={userName} onChange={(e) => setUserName(e.target.value)} placeholder="اسمك" className="mb-3" />
         <label className="block text-[11px] text-t2 mb-1 font-bold">اسم النادي / الفريق</label>
-        <input value={clubName} onChange={(e) => setClubName(e.target.value)} placeholder="اسم النادي" />
+        <input value={clubName} onChange={(e) => setClubName(e.target.value)} placeholder="اسم النادي" className="mb-3" />
+        <label className="block text-[11px] text-t2 mb-1 font-bold">نبذة عن النادي أو الفئة</label>
+        <textarea
+          value={bio}
+          onChange={(e) => setBio(e.target.value)}
+          placeholder="نبذة قصيرة..."
+          rows={3}
+          className="w-full resize-none bg-bg border border-bd rounded-lg p-2 text-[13px]"
+        />
+      </div>
+
+      <div className="bg-s1 border border-bd rounded-2xl p-4 mb-3">
+        <div className="text-[14px] font-extrabold mb-1">صورة غلاف الصفحة الرئيسية</div>
+        <p className="text-[10px] text-t3 mb-3">تظهر أعلى الصفحة الرئيسية — اضغط عليها لاستبدالها بصورة فريقك.</p>
+        <HeaderImageUpload value={headerImage} onChange={setHeaderImage} onClear={() => setHeaderImage(null)} />
       </div>
 
       <div className="bg-s1 border border-bd rounded-2xl p-4 mb-3">
         <div className="text-[14px] font-extrabold mb-3">شعار النادي</div>
         <LogoUpload value={clubLogo} onChange={setClubLogo} size={64} />
+      </div>
+
+      <div className="bg-s1 border border-bd rounded-2xl p-4 mb-3">
+        <div className="text-[14px] font-extrabold mb-1">صورة الزي الرسمي (Jersey)</div>
+        <p className="text-[10px] text-t3 mb-3">
+          صورة واضحة للزي الرسمي — تُستخدم كمرجع عند توليد صور اللاعبين بالذكاء الاصطناعي.
+        </p>
+        <LogoUpload value={jerseyPhoto} onChange={setJerseyPhoto} size={64} />
       </div>
 
       <div className="bg-s1 border border-bd rounded-2xl p-4 mb-3">

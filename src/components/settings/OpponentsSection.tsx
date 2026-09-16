@@ -15,7 +15,7 @@ export function OpponentsSection() {
     removeOpponentPlayer,
   } = useClubStore()
   const [name, setName] = useState('')
-  const [expanded, setExpanded] = useState<string | null>(null)
+  const [selected, setSelected] = useState<string | null>(null)
 
   const handleAdd = () => {
     const trimmed = name.trim()
@@ -24,44 +24,67 @@ export function OpponentsSection() {
     setName('')
   }
 
+  const selectedPreset = opponentPresets.find((p) => p.id === selected) ?? null
+
   return (
     <div className="bg-s1 border border-bd rounded-2xl p-4 mb-3">
       <div className="text-[14px] font-extrabold mb-3">🆚 الفرق المنافسة ({opponentPresets.length})</div>
-      {opponentPresets.map((preset) => {
-        const roster = opponentRosters[preset.id] ?? []
-        return (
-          <div key={preset.id} className="bg-bg border border-bd rounded-xl p-2.5 mb-1.5">
-            <div className="flex items-center gap-2">
-              <LogoUpload value={preset.logo} onChange={(d) => setOpponentPresetLogo(preset.id, d)} size={32} />
-              <span className="flex-1 text-[13px] font-bold">{preset.name}</span>
-              <Link to={`/scouting/${preset.id}`} className="text-[11px] font-bold text-t2">
-                📋 استطلاع
-              </Link>
-              <button
-                onClick={() => setExpanded(expanded === preset.id ? null : preset.id)}
-                className="text-[11px] text-pri font-bold"
-              >
-                {isPro ? (expanded === preset.id ? 'إخفاء اللاعبين' : 'أرقام اللاعبين') : '🔒 PRO'}
-              </button>
-              <button
-                onClick={() => removeOpponentPreset(preset.id)}
-                className="w-6 h-6 rounded-full bg-err/10 text-err text-xs flex items-center justify-center"
-              >
-                ✕
-              </button>
-            </div>
 
-            {isPro && expanded === preset.id && (
-              <OpponentRosterEditor
-                presetId={preset.id}
-                players={roster}
-                onAdd={(n, num) => addOpponentPlayer(preset.id, n, num)}
-                onRemove={(pid) => removeOpponentPlayer(preset.id, pid)}
-              />
-            )}
+      <div className="grid grid-cols-3 gap-2 mb-3">
+        {opponentPresets.map((preset) => (
+          <button
+            key={preset.id}
+            onClick={() => setSelected(selected === preset.id ? null : preset.id)}
+            className={`flex flex-col items-center gap-1.5 border rounded-xl px-2 pt-3 pb-2 ${
+              selected === preset.id ? 'bg-pri/10 border-pri' : 'bg-bg border-bd'
+            }`}
+          >
+            <div className="w-14 h-14 rounded-full bg-s2 border border-bl overflow-hidden flex items-center justify-center text-pri font-black text-lg">
+              {preset.logo ? <img src={preset.logo} alt="" className="w-full h-full object-cover" /> : '🆚'}
+            </div>
+            <span className="text-[12px] font-bold text-center leading-tight line-clamp-2">{preset.name}</span>
+          </button>
+        ))}
+      </div>
+
+      {selectedPreset && (
+        <div className="bg-bg border border-bd rounded-xl p-3 mb-3">
+          <div className="flex items-center gap-2 mb-2">
+            <LogoUpload
+              value={selectedPreset.logo}
+              onChange={(d) => setOpponentPresetLogo(selectedPreset.id, d)}
+              size={40}
+            />
+            <span className="flex-1 text-[13px] font-bold">{selectedPreset.name}</span>
+            <Link to={`/scouting/${selectedPreset.id}`} className="text-[11px] font-bold text-t2">
+              📋 استطلاع
+            </Link>
+            <button
+              onClick={() => {
+                removeOpponentPreset(selectedPreset.id)
+                setSelected(null)
+              }}
+              className="w-7 h-7 rounded bg-err/10 text-err text-xs flex items-center justify-center"
+            >
+              ✕
+            </button>
           </div>
-        )
-      })}
+
+          {isPro ? (
+            <OpponentRosterEditor
+              presetId={selectedPreset.id}
+              players={opponentRosters[selectedPreset.id] ?? []}
+              onAdd={(n, num) => addOpponentPlayer(selectedPreset.id, n, num)}
+              onRemove={(pid) => removeOpponentPlayer(selectedPreset.id, pid)}
+            />
+          ) : (
+            <p className="text-[10px] text-t3 pt-2 border-t border-bd mt-2">
+              🔒 تسجيل أرقام لاعبي المنافس لتحليل نقاط قوته وضعفه متاح في النسخة المدفوعة.
+            </p>
+          )}
+        </div>
+      )}
+
       <div className="flex gap-1.5 mt-2">
         <input
           value={name}
@@ -74,11 +97,6 @@ export function OpponentsSection() {
           +
         </button>
       </div>
-      {!isPro && (
-        <p className="text-[10px] text-t3 mt-2">
-          🔒 تسجيل أرقام لاعبي المنافس لتحليل نقاط قوته وضعفه متاح في النسخة المدفوعة.
-        </p>
-      )}
     </div>
   )
 }
@@ -103,7 +121,7 @@ function OpponentRosterEditor({ players, onAdd, onRemove }: OpponentRosterEditor
   }
 
   return (
-    <div className="mt-2 pt-2 border-t border-bd">
+    <div className="pt-2 border-t border-bd">
       {players.map((p) => (
         <div key={p.id} className="flex items-center gap-2 mb-1 text-[12px]">
           <span className="text-t3 w-8">#{p.number ?? '—'}</span>

@@ -81,6 +81,15 @@ interface MatchesActions {
     date: string,
     playerIds: string[],
   ) => string
+  /** يحجز مباراة بتاريخ مستقبلي بلا لاعبين بعد — تظهر كـ"المباراة القادمة" بالصفحة الرئيسية */
+  createScheduledMatch: (
+    opponentName: string,
+    opponentLogo: string | null,
+    opponentPresetId: string | null,
+    date: string,
+  ) => string
+  /** يحوّل مباراة محجوزة إلى مباراة حيّة بعد اختيار لاعبي اليوم */
+  startScheduledMatch: (id: string, playerIds: string[]) => void
   deleteMatch: (id: string) => void
   finishMatch: (id: string) => void
 
@@ -157,6 +166,36 @@ export const useMatchesStore = create<Store>()(
         set((st) => ({ matches: { ...st.matches, [id]: match } }))
         return id
       },
+      createScheduledMatch: (opponentName, opponentLogo, opponentPresetId, date) => {
+        const id = uid()
+        const match: Match = {
+          id,
+          createdAt: Date.now(),
+          date,
+          opponentName,
+          opponentLogo,
+          opponentPresetId,
+          playerIds: [],
+          mode: 'grid',
+          set: 1,
+          sA: [0, 0, 0, 0, 0],
+          sB: [0, 0, 0, 0, 0],
+          setWinners: [null, null, null, null, null],
+          status: 'scheduled',
+          act: [],
+          events: [],
+          rotation: { A: { 1: emptyRotation() }, B: { 1: emptyRotation() } },
+          servingSide: {},
+        }
+        set((st) => ({ matches: { ...st.matches, [id]: match } }))
+        return id
+      },
+      startScheduledMatch: (id, playerIds) =>
+        set((st) => {
+          const match = st.matches[id]
+          if (!match || match.status !== 'scheduled') return st
+          return { matches: { ...st.matches, [id]: { ...match, status: 'live', playerIds } } }
+        }),
       deleteMatch: (id) =>
         set((st) => {
           const next = { ...st.matches }

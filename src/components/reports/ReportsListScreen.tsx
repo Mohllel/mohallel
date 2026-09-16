@@ -6,7 +6,9 @@ import { countSetWins } from '../../lib/scoring'
 export function ReportsListScreen() {
   const { matches } = useMatchesStore()
   const { clubName } = useClubStore()
-  const list = Object.values(matches).sort((a, b) => b.createdAt - a.createdAt)
+  const list = Object.values(matches)
+    .filter((m) => m.status !== 'scheduled')
+    .sort((a, b) => b.createdAt - a.createdAt)
 
   return (
     <div className="p-4 animate-[fadeIn_.3s_ease]">
