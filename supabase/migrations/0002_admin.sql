@@ -48,9 +48,9 @@ begin
     select
       u.id,
       u.email::text,
-      s.data->>'clubName',
-      s.data->>'userName',
-      coalesce((s.data->>'isPro')::boolean, false),
+      s.data->'state'->>'clubName',
+      s.data->'state'->>'userName',
+      coalesce((s.data->'state'->>'isPro')::boolean, false),
       s.updated_at
     from app_state s
     join auth.users u on u.id = s.user_id
@@ -71,7 +71,7 @@ begin
   end if;
 
   update app_state
-  set data = jsonb_set(data, '{isPro}', to_jsonb(pro_value)), updated_at = now()
+  set data = jsonb_set(data, '{state,isPro}', to_jsonb(pro_value)), updated_at = now()
   where user_id = target_user_id and store_name = 'mohallel-club';
 end;
 $$;
@@ -95,9 +95,9 @@ begin
   return query
     select
       (select count(*) from app_state where store_name = 'mohallel-club'),
-      (select count(*) from app_state where store_name = 'mohallel-club' and (data->>'isPro')::boolean = true),
-      (select coalesce(sum(match_count), 0) from (
-        select (select count(*) from jsonb_object_keys(coalesce(data->'matches', '{}'::jsonb))) as match_count
+      (select count(*) from app_state where store_name = 'mohallel-club' and (data->'state'->>'isPro')::boolean = true),
+      (select coalesce(sum(match_count), 0)::bigint from (
+        select (select count(*) from jsonb_object_keys(coalesce(data->'state'->'matches', '{}'::jsonb))) as match_count
         from app_state where store_name = 'mohallel-matches'
       ) counts);
 end;
