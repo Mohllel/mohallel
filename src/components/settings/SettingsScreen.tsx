@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useClubStore } from '../../store/useClubStore'
 import { useAuthStore } from '../../store/useAuthStore'
 import { LogoUpload } from '../shared/LogoUpload'
@@ -24,11 +25,21 @@ export function SettingsScreen() {
     setColors,
     toggleIsPro,
   } = useClubStore()
-  const { user, signOut } = useAuthStore()
+  const { user, isAdmin, signOut } = useAuthStore()
 
   return (
     <div className="p-4 animate-[fadeIn_.3s_ease]">
       <h2 className="text-[18px] font-black mb-3">⚙ لوحة التحكم</h2>
+
+      {isAdmin && (
+        <Link
+          to="/admin"
+          className="flex items-center justify-between bg-pri text-white rounded-2xl p-4 mb-3 font-extrabold text-[14px]"
+        >
+          🛠 لوحة المطوّر
+          <span>←</span>
+        </Link>
+      )}
 
       <div className="bg-s1 border border-bd rounded-2xl p-4 mb-3">
         <div className="text-[14px] font-extrabold mb-3">الملف الشخصي</div>

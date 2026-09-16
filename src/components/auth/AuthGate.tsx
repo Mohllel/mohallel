@@ -5,6 +5,7 @@ import { useClubStore } from '../../store/useClubStore'
 import { useMatchesStore } from '../../store/useMatchesStore'
 import { useTrainingStore } from '../../store/useTrainingStore'
 import { checkAndOfferLocalImport } from '../../lib/importLocalData'
+import { fetchAppSettings, type AppSettings } from '../../lib/adminApi'
 import { Logo } from '../brand/Logo'
 import { LoginScreen } from './LoginScreen'
 
@@ -18,9 +19,22 @@ function Splash() {
   )
 }
 
+function MaintenanceScreen() {
+  return (
+    <div className="min-h-dvh flex items-center justify-center p-4 text-center">
+      <div>
+        <div className="text-4xl mb-3">🛠</div>
+        <h1 className="text-[18px] font-black mb-1">التطبيق تحت الصيانة حالياً</h1>
+        <p className="text-t2 text-[13px]">نعمل على تحسينات — عاود المحاولة بعد قليل.</p>
+      </div>
+    </div>
+  )
+}
+
 export function AuthGate({ children }: { children: ReactNode }) {
-  const { session, user, loading } = useAuthStore()
+  const { session, user, loading, isAdmin } = useAuthStore()
   const [dataReady, setDataReady] = useState(false)
+  const [settings, setSettings] = useState<AppSettings | null>(null)
 
   useEffect(() => {
     if (!session || !user) {
@@ -29,13 +43,19 @@ export function AuthGate({ children }: { children: ReactNode }) {
     }
     let cancelled = false
     ;(async () => {
-      await Promise.all([
-        useClubStore.persist.rehydrate(),
-        useMatchesStore.persist.rehydrate(),
-        useTrainingStore.persist.rehydrate(),
+      const [, appSettings] = await Promise.all([
+        Promise.all([
+          useClubStore.persist.rehydrate(),
+          useMatchesStore.persist.rehydrate(),
+          useTrainingStore.persist.rehydrate(),
+        ]),
+        fetchAppSettings(),
       ])
       await checkAndOfferLocalImport(user.id)
-      if (!cancelled) setDataReady(true)
+      if (!cancelled) {
+        setSettings(appSettings)
+        setDataReady(true)
+      }
     })()
     return () => {
       cancelled = true
@@ -45,5 +65,14 @@ export function AuthGate({ children }: { children: ReactNode }) {
   if (loading) return <Splash />
   if (!session) return <LoginScreen />
   if (!dataReady) return <Splash />
-  return <>{children}</>
+  if (settings?.maintenance_mode && !isAdmin) return <MaintenanceScreen />
+
+  return (
+    <>
+      {settings?.announcement && (
+        <div className="bg-sec text-white text-[12px] font-bold text-center py-2 px-3">{settings.announcement}</div>
+      )}
+      {children}
+    </>
+  )
 }
