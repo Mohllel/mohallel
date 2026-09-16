@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import { useClubStore } from './store/useClubStore'
+import { AuthGate } from './components/auth/AuthGate'
 import { TabLayout } from './components/layout/TabLayout'
 import { HomeScreen } from './components/home/HomeScreen'
 import { SetupScreen } from './components/setup/SetupScreen'
@@ -19,6 +20,16 @@ import { TrainingSessionScreen } from './components/training/TrainingSessionScre
 import { PublicLiveScoreScreen } from './components/live-public/PublicLiveScoreScreen'
 
 function App() {
+  return (
+    <Routes>
+      {/* رابط عام لمتابعة النتيجة لحظياً — بلا تسجيل دخول، يبقى خارج AuthGate عمداً */}
+      <Route path="/live/:matchId" element={<PublicLiveScoreScreen />} />
+      <Route path="*" element={<AuthGate><AuthenticatedApp /></AuthGate>} />
+    </Routes>
+  )
+}
+
+function AuthenticatedApp() {
   const colors = useClubStore((s) => s.colors)
 
   useEffect(() => {
@@ -44,7 +55,6 @@ function App() {
       <Route path="/scouting/:presetId" element={<ScoutingReportScreen />} />
       <Route path="/training/new" element={<NewTrainingScreen />} />
       <Route path="/training/:id" element={<TrainingSessionScreen />} />
-      <Route path="/live/:matchId" element={<PublicLiveScoreScreen />} />
     </Routes>
   )
 }

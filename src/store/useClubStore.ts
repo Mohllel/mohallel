@@ -1,6 +1,7 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { createJSONStorage, persist } from 'zustand/middleware'
 import type { ClubProfile, OpponentPreset, Player } from '../types/domain'
+import { supabaseStorage } from '../lib/supabaseStorage'
 
 const uid = () => Math.random().toString(36).slice(2, 11)
 
@@ -127,6 +128,8 @@ export const useClubStore = create<Store>()(
     }),
     {
       name: 'mohallel-club',
+      storage: createJSONStorage(() => supabaseStorage),
+      skipHydration: true,
       version: 1,
       migrate: (persisted) => migrateClubState(persisted),
     },
