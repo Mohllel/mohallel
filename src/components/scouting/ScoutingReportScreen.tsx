@@ -2,6 +2,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useClubStore } from '../../store/useClubStore'
 import { useMatchesStore } from '../../store/useMatchesStore'
 import { buildScoutingReport } from '../../lib/scouting'
+import { ZoneHeatmap } from '../analytics/ZoneHeatmap'
 
 export function ScoutingReportScreen() {
   const { presetId } = useParams<{ presetId: string }>()
@@ -58,6 +59,19 @@ export function ScoutingReportScreen() {
           </div>
         )}
       </div>
+
+      {report.matchesPlayed > 0 && (
+        <div className="bg-s1 border border-bd rounded-2xl p-4 mb-3">
+          <div className="text-[14px] font-extrabold mb-3">🗺️ أين يسجّل هذا المنافس نقاطه</div>
+          {report.opponentZones.every((c) => c === 0) ? (
+            <p className="text-[12px] text-t3">لا توجد نقاط مسجَّلة من خريطة الملعب بمبارياتكم السابقة معه بعد.</p>
+          ) : (
+            <div className="max-w-[160px] mx-auto">
+              <ZoneHeatmap counts={report.opponentZones} color="var(--color-err)" />
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="bg-s1 border border-bd rounded-2xl p-4 mb-3">
         <div className="flex items-center justify-between mb-2">

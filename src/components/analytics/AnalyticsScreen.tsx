@@ -6,7 +6,10 @@ import { COURT_POSITIONS } from '../../constants/courtPositions'
 import { isMatchDecided } from '../../lib/scoring'
 import { computeAggregateSideout, computeMatchSideout } from '../../lib/sideout'
 import { computeRotationEffectiveness } from '../../lib/rotationEffectiveness'
+import { computeZoneHeatmap } from '../../lib/heatmap'
+import { computeServerTendency } from '../../lib/serverTendency'
 import { PlayerTrendSection } from './PlayerTrendSection'
+import { ZoneHeatmap } from './ZoneHeatmap'
 
 export function AnalyticsScreen() {
   const { players, isPro, opponentRosters } = useClubStore()
@@ -38,10 +41,14 @@ export function AnalyticsScreen() {
 
   const sideout = selectedMatch ? computeMatchSideout(selectedMatch) : computeAggregateSideout(list)
   const rotationStints = selectedMatch ? computeRotationEffectiveness(selectedMatch, 'A') : []
+  const scopeMatches = selectedMatch ? [selectedMatch] : list
+  const zoneHeatmap = useMemo(() => computeZoneHeatmap(scopeMatches), [scopeMatches])
+  const serverTendency = useMemo(() => computeServerTendency(scopeMatches, 'A'), [scopeMatches])
   const playerLabel = (id: string) => {
     const p = players.find((pl) => pl.id === id)
     return p ? `#${p.number ?? '—'}` : '—'
   }
+  const playerName = (id: string) => players.find((pl) => pl.id === id)?.name ?? '—'
 
   return (
     <div className="p-4 animate-[fadeIn_.3s_ease]">
@@ -84,6 +91,55 @@ export function AnalyticsScreen() {
                   فاز فريقك بـ{sideout.A.won} من {sideout.A.received} كرة عند استقبال الإرسال
                   {selectedMatch ? '' : ' (كل المباريات مجمَّعة)'}. يُحتسب بافتراض أن الفائز بالنقطة يُرسل تالياً.
                 </p>
+              </>
+            )}
+          </div>
+
+          <div className="bg-s1 border border-bd rounded-2xl p-4 mb-3">
+            <div className="text-[14px] font-extrabold mb-3">🗺️ خرائط حرارية لمناطق النقاط</div>
+            {zoneHeatmap.own.every((c) => c === 0) && zoneHeatmap.opponent.every((c) => c === 0) ? (
+              <p className="text-[12px] text-t3">
+                لا توجد نقاط مسجَّلة من خريطة الملعب بعد — استخدم وضع "خريطة الملعب" أثناء التسجيل.
+              </p>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <p className="text-center text-[11px] font-bold text-pri mb-1.5">نقاطنا</p>
+                  <ZoneHeatmap counts={zoneHeatmap.own} color="var(--color-pri)" />
+                </div>
+                <div>
+                  <p className="text-center text-[11px] font-bold text-err mb-1.5">نقاط المنافس</p>
+                  <ZoneHeatmap counts={zoneHeatmap.opponent} color="var(--color-err)" />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="bg-s1 border border-bd rounded-2xl p-4 mb-3">
+            <div className="text-[14px] font-extrabold mb-2">🎯 حسب من يُرسل</div>
+            {serverTendency.length === 0 ? (
+              <p className="text-[12px] text-t3">
+                لا توجد تشكيلة مكتملة (٦ لاعبين) مسجَّلة بعد — عيّنها من خريطة الملعب.
+              </p>
+            ) : (
+              <>
+                <p className="text-[10px] text-t3 mb-2">
+                  أي دوران عندنا (بحسب مَن يشغل مركز الإرسال) يستغلّه المنافس أكثر
+                </p>
+                {serverTendency.slice(0, 5).map((s) => {
+                  const net = s.pointsFor - s.pointsAgainst
+                  return (
+                    <div key={s.playerId} className="flex items-center gap-2 py-1.5 border-b border-bd last:border-b-0">
+                      <span className="flex-1 text-[12px] font-bold truncate">{playerName(s.playerId)}</span>
+                      <span className="text-[11px] font-bold text-t2">
+                        {s.pointsFor}:{s.pointsAgainst}
+                      </span>
+                      <span className={`text-[11px] font-extrabold w-9 text-left ${net > 0 ? 'text-ok' : net < 0 ? 'text-err' : 'text-t3'}`}>
+                        {net > 0 ? `+${net}` : net}
+                      </span>
+                    </div>
+                  )
+                })}
               </>
             )}
           </div>

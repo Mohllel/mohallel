@@ -64,6 +64,30 @@ export function computeUserStatus(row: AdminUserRow): UserStatus {
   return lastActivity > 0 && now - lastActivity <= THIRTY_DAYS_MS ? 'active' : 'inactive'
 }
 
+export interface SignupGrowthPoint {
+  monthKey: string
+  label: string
+  count: number
+}
+
+/** عدد التسجيلات الجديدة لكل شهر — من created_at الموجود أصلاً بـ admin_list_users()، بلا استعلام إضافي */
+export function computeSignupGrowth(users: AdminUserRow[]): SignupGrowthPoint[] {
+  const counts = new Map<string, number>()
+  for (const u of users) {
+    const d = new Date(u.created_at)
+    const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    counts.set(monthKey, (counts.get(monthKey) ?? 0) + 1)
+  }
+
+  return Array.from(counts.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([monthKey, count]) => {
+      const [year, month] = monthKey.split('-').map(Number)
+      const label = new Date(year, month - 1, 1).toLocaleDateString('ar', { month: 'short', year: 'numeric' })
+      return { monthKey, label, count }
+    })
+}
+
 export async function fetchAppSettings(): Promise<AppSettings> {
   if (!supabase) return { maintenance_mode: false, announcement: '' }
   const { data, error } = await supabase
