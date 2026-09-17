@@ -14,6 +14,8 @@ interface AuthState {
   loading: boolean
   /** هل المستخدم الحالي عضو بجدول admins (وصول مطوّر كامل للمنصة) */
   isAdmin: boolean
+  /** هل انتهى فحص عضوية admins لهذه الجلسة؟ — يمنع اعتبار isAdmin=false نهائياً قبل اكتمال الفحص الفعلي */
+  adminChecked: boolean
   /** معرّف النادي (= user_id صاحبه) الذي يعمل عليه المستخدم الحالي الآن — إما نفسه أو نادٍ دُعي إليه */
   activeClubId: string | null
   /** الأندية التي دُعي إليها المستخدم الحالي كعضو (غير نادي نفسه) */
@@ -29,6 +31,7 @@ export const useAuthStore = create<AuthState>()(() => ({
   user: null,
   loading: true,
   isAdmin: false,
+  adminChecked: false,
   activeClubId: null,
   memberships: [],
 
@@ -51,11 +54,11 @@ export const useAuthStore = create<AuthState>()(() => ({
 
 async function refreshAdminStatus(userId: string | undefined) {
   if (!supabase || !userId) {
-    useAuthStore.setState({ isAdmin: false })
+    useAuthStore.setState({ isAdmin: false, adminChecked: true })
     return
   }
   const { data } = await supabase.from('admins').select('user_id').eq('user_id', userId).maybeSingle()
-  useAuthStore.setState({ isAdmin: !!data })
+  useAuthStore.setState({ isAdmin: !!data, adminChecked: true })
 }
 
 async function refreshMemberships(userId: string | undefined) {
@@ -92,6 +95,7 @@ if (supabase) {
       loading: false,
       activeClubId: userId ?? null,
       memberships: [],
+      adminChecked: false,
     })
     refreshAdminStatus(userId)
     refreshMemberships(userId)
