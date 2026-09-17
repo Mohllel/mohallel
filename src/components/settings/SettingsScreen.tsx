@@ -26,7 +26,7 @@ export function SettingsScreen() {
     setColors,
     toggleIsPro,
   } = useClubStore()
-  const { user, isAdmin, signOut } = useAuthStore()
+  const { user, isAdmin, signOut, setViewMode } = useAuthStore()
 
   return (
     <div className="p-4 animate-[fadeIn_.3s_ease]">
@@ -35,6 +35,7 @@ export function SettingsScreen() {
       {isAdmin && (
         <Link
           to="/admin"
+          onClick={() => setViewMode('admin')}
           className="flex items-center justify-between bg-pri text-white rounded-2xl p-4 mb-3 font-extrabold text-[14px]"
         >
           🛠 لوحة المطوّر

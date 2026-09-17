@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
-import { Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import { useClubStore } from './store/useClubStore'
+import { useAuthStore } from './store/useAuthStore'
 import { AuthGate } from './components/auth/AuthGate'
 import { TabLayout } from './components/layout/TabLayout'
 import { HomeScreen } from './components/home/HomeScreen'
@@ -32,11 +33,21 @@ function App() {
 
 function AuthenticatedApp() {
   const colors = useClubStore((s) => s.colors)
+  const { isAdmin, viewMode } = useAuthStore()
 
   useEffect(() => {
     document.documentElement.style.setProperty('--color-pri', colors.pri)
     document.documentElement.style.setProperty('--color-sec', colors.sec)
   }, [colors])
+
+  if (isAdmin && viewMode === 'admin') {
+    return (
+      <Routes>
+        <Route path="/admin" element={<AdminScreen />} />
+        <Route path="*" element={<Navigate to="/admin" replace />} />
+      </Routes>
+    )
+  }
 
   return (
     <Routes>

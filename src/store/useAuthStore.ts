@@ -20,7 +20,10 @@ interface AuthState {
   activeClubId: string | null
   /** الأندية التي دُعي إليها المستخدم الحالي كعضو (غير نادي نفسه) */
   memberships: Membership[]
+  /** لحسابات المطوّرين فقط: أي واجهة تُعرض — 'admin' (لوحة المطوّر فقط) أو 'club' (تجربة مشترك عادية). بلا أثر لغير المطوّرين. */
+  viewMode: 'admin' | 'club'
   setActiveClubId: (id: string) => void
+  setViewMode: (mode: 'admin' | 'club') => void
   signUp: (email: string, password: string) => Promise<string | null>
   signIn: (email: string, password: string) => Promise<string | null>
   signOut: () => Promise<void>
@@ -34,8 +37,10 @@ export const useAuthStore = create<AuthState>()(() => ({
   adminChecked: false,
   activeClubId: null,
   memberships: [],
+  viewMode: 'admin',
 
   setActiveClubId: (id) => useAuthStore.setState({ activeClubId: id }),
+  setViewMode: (mode) => useAuthStore.setState({ viewMode: mode }),
 
   signUp: async (email, password) => {
     if (!supabase) return 'الخدمة السحابية غير مُفعّلة'

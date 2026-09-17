@@ -17,19 +17,27 @@ type TabId = (typeof TABS)[number]['id']
 
 export function AdminScreen() {
   const navigate = useNavigate()
-  const { isAdmin, adminChecked } = useAuthStore()
+  const { isAdmin, adminChecked, setViewMode, signOut } = useAuthStore()
   const [tab, setTab] = useState<TabId>('dashboard')
 
   if (!adminChecked) return <p className="text-center text-t3 text-[13px] mt-10">جارٍ التحقق...</p>
   if (!isAdmin) return <Navigate to="/settings" replace />
 
+  const goToClubMode = () => {
+    setViewMode('club')
+    navigate('/')
+  }
+
   return (
     <div className="p-4 animate-[fadeIn_.3s_ease]">
       <div className="flex items-center gap-2 mb-4">
-        <button onClick={() => navigate('/settings')} className="text-[13px] font-bold text-pri">
-          → رجوع
+        <button onClick={goToClubMode} className="text-[12px] font-bold text-pri whitespace-nowrap">
+          🏐 وضع النادي
         </button>
-        <h2 className="text-[18px] font-black flex-1 text-center">🛠 لوحة المطوّر</h2>
+        <h2 className="text-[16px] font-black flex-1 text-center truncate">🛠 لوحة المطوّر</h2>
+        <button onClick={signOut} className="text-[12px] font-bold text-err whitespace-nowrap">
+          خروج
+        </button>
       </div>
 
       <div className="flex gap-1.5 mb-4 overflow-x-auto">
