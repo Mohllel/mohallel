@@ -7,11 +7,12 @@ import { Avatar } from '../shared/Avatar'
 
 export function SetupScreen() {
   const navigate = useNavigate()
-  const { players, opponentPresets, addOpponentPreset } = useClubStore()
+  const { players, opponentPresets, addOpponentPreset, competitions } = useClubStore()
   const { createMatch } = useMatchesStore()
 
   const [opponentId, setOpponentId] = useState<string>('')
   const [newOpponentName, setNewOpponentName] = useState('')
+  const [competitionId, setCompetitionId] = useState<string>('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [selectedPlayers, setSelectedPlayers] = useState<Set<string>>(new Set(players.map((p) => p.id)))
 
@@ -39,7 +40,14 @@ export function SetupScreen() {
       opponentLogo = preset.logo
       presetId = preset.id
     }
-    const id = createMatch(opponentName, opponentLogo, presetId, date, Array.from(selectedPlayers))
+    const id = createMatch(
+      opponentName,
+      opponentLogo,
+      presetId,
+      date,
+      Array.from(selectedPlayers),
+      competitionId || null,
+    )
     navigate(`/match/${id}/live`)
   }
 
@@ -77,7 +85,21 @@ export function SetupScreen() {
           />
         )}
         <label className="block text-[11px] text-t2 mb-1 font-bold">التاريخ</label>
-        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="mb-2" />
+
+        {competitions.length > 0 && (
+          <>
+            <label className="block text-[11px] text-t2 mb-1 font-bold">المسابقة (اختياري)</label>
+            <select value={competitionId} onChange={(e) => setCompetitionId(e.target.value)}>
+              <option value="">— بلا مسابقة —</option>
+              {competitions.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </>
+        )}
 
         {opponentId && opponentId !== '__new__' && (
           <Link

@@ -4,6 +4,7 @@ import { useAuthStore } from '../../store/useAuthStore'
 import { LogoUpload } from '../shared/LogoUpload'
 import { HeaderImageUpload } from '../shared/HeaderImageUpload'
 import { OpponentsSection } from './OpponentsSection'
+import { CompetitionsSection } from './CompetitionsSection'
 import { RosterSection } from './RosterSection'
 import { CollaborationSection } from './CollaborationSection'
 
@@ -86,6 +87,7 @@ export function SettingsScreen() {
       </div>
 
       <RosterSection />
+      <CompetitionsSection />
       <OpponentsSection />
 
       <div className="bg-s1 border border-bd rounded-2xl p-4 mb-3 flex items-center justify-between">
