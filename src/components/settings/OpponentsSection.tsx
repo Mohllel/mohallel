@@ -53,6 +53,7 @@ export function OpponentsSection() {
             <LogoUpload
               value={selectedPreset.logo}
               onChange={(d) => setOpponentPresetLogo(selectedPreset.id, d)}
+              path={`opponents/${selectedPreset.id}`}
               size={40}
             />
             <span className="flex-1 text-[13px] font-bold">{selectedPreset.name}</span>

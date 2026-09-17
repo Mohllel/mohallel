@@ -5,6 +5,7 @@ import { useClubStore } from '../../store/useClubStore'
 import { useMatchesStore } from '../../store/useMatchesStore'
 import { useTrainingStore } from '../../store/useTrainingStore'
 import { checkAndOfferLocalImport } from '../../lib/importLocalData'
+import { migrateClubImagesToStorage } from '../../lib/imageMigration'
 import { fetchAppSettings, type AppSettings } from '../../lib/adminApi'
 import { Logo } from '../brand/Logo'
 import { LoginScreen } from './LoginScreen'
@@ -56,6 +57,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
         setSettings(appSettings)
         setDataReady(true)
       }
+      migrateClubImagesToStorage().catch((e) => console.error('[imageMigration] فشل', e))
     })()
     return () => {
       cancelled = true

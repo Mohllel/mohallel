@@ -65,7 +65,7 @@ export function SettingsScreen() {
 
       <div className="bg-s1 border border-bd rounded-2xl p-4 mb-3">
         <div className="text-[14px] font-extrabold mb-3">شعار النادي</div>
-        <LogoUpload value={clubLogo} onChange={setClubLogo} size={64} />
+        <LogoUpload value={clubLogo} onChange={setClubLogo} path="club-logo" size={64} />
       </div>
 
       <div className="bg-s1 border border-bd rounded-2xl p-4 mb-3">
@@ -73,7 +73,7 @@ export function SettingsScreen() {
         <p className="text-[10px] text-t3 mb-3">
           صورة واضحة للزي الرسمي — تُستخدم كمرجع عند توليد صور اللاعبين بالذكاء الاصطناعي.
         </p>
-        <LogoUpload value={jerseyPhoto} onChange={setJerseyPhoto} size={64} />
+        <LogoUpload value={jerseyPhoto} onChange={setJerseyPhoto} path="jersey" size={64} />
       </div>
 
       <div className="bg-s1 border border-bd rounded-2xl p-4 mb-3">
