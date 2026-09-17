@@ -1,13 +1,13 @@
 import { pointSideForAction } from './scoring'
-import type { Match, TeamSide } from '../types/domain'
+import type { Match, RotationSlot, TeamSide } from '../types/domain'
 
-interface ScoredPoint {
+export interface ScoredPoint {
   ts: number
   set: number
   side: TeamSide
 }
 
-function orderedPoints(match: Match): ScoredPoint[] {
+export function orderedPoints(match: Match): ScoredPoint[] {
   const fromActions: ScoredPoint[] = match.act
     .map((a) => {
       const side = pointSideForAction(a.side, a.skill, a.quality, a.serveType)
@@ -27,22 +27,28 @@ function orderedPoints(match: Match): ScoredPoint[] {
 }
 
 /**
- * لاعبو الملعب الستة لحظة زمنية معيّنة. مهم: match.rotation[side][setNo] يعكس
- * آخر حالة حالية (تُحدَّث مباشرة مع كل تبديل)، وليس التشكيلة الأصلية عند بداية
+ * تشكيلة الملعب الكاملة (موقع + لاعب) لحظة زمنية معيّنة. مهم: match.rotation[side][setNo]
+ * يعكس آخر حالة حالية (تُحدَّث مباشرة مع كل تبديل)، وليس التشكيلة الأصلية عند بداية
  * الشوط — لذا نُعيد البناء بالرجوع من الحالة الحالية وإلغاء أي تبديل وقع
  * *بعد* اللحظة المطلوبة، بترتيب زمني عكسي.
  */
-function onCourtAt(match: Match, side: TeamSide, setNo: number, atTs: number): string[] {
-  let roster = (match.rotation[side]?.[setNo]?.map((s) => s.playerId) ?? []) as (string | null)[]
+export function reconstructSlotsAt(match: Match, side: TeamSide, setNo: number, atTs: number): RotationSlot[] {
+  let slots = match.rotation[side]?.[setNo] ?? []
 
   const laterSubs = match.events
     .filter((e) => e.type === 'substitution' && e.side === side && e.set === setNo && e.ts > atTs)
     .sort((a, b) => b.ts - a.ts)
 
   for (const sub of laterSubs) {
-    roster = roster.map((id) => (id === sub.subInPlayerId ? sub.subOutPlayerId ?? id : id))
+    slots = slots.map((s) => (s.playerId === sub.subInPlayerId ? { ...s, playerId: sub.subOutPlayerId ?? s.playerId } : s))
   }
-  return roster.filter((id): id is string => !!id)
+  return slots
+}
+
+function onCourtAt(match: Match, side: TeamSide, setNo: number, atTs: number): string[] {
+  return reconstructSlotsAt(match, side, setNo, atTs)
+    .map((s) => s.playerId)
+    .filter((id): id is string => !!id)
 }
 
 export interface RotationStint {

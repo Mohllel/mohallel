@@ -1,5 +1,6 @@
 import { bestPlayer, commonErrors, worstPlayer, type PlayerRanking, type ErrorStat } from './analytics'
 import { isMatchDecided } from './scoring'
+import { computeZoneHeatmap } from './heatmap'
 import type { Action, Match, Player } from '../types/domain'
 
 export interface ScoutingReport {
@@ -14,6 +15,8 @@ export interface ScoutingReport {
   errorLeaders: ErrorStat[]
   serveErrorLeaders: ErrorStat[]
   mostFrequentAttacker: { player: Player; count: number } | null
+  /** أين يسجّل هذا المنافس نقاطه غالباً (من أحداث خريطة الملعب بمبارياته السابقة) */
+  opponentZones: number[]
 }
 
 function serveErrorStats(players: Player[], actions: Action[]): ErrorStat[] {
@@ -57,5 +60,6 @@ export function buildScoutingReport(matches: Match[], opponentPresetId: string, 
     errorLeaders: hasRosterData ? commonErrors(opponentRoster, opponentActions).slice(0, 3) : [],
     serveErrorLeaders: hasRosterData ? serveErrorStats(opponentRoster, opponentActions).slice(0, 3) : [],
     mostFrequentAttacker: attackCounts[0] ?? null,
+    opponentZones: computeZoneHeatmap(relevant).opponent,
   }
 }

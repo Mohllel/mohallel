@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { fetchAllUsers, computeUserStatus, type AdminUserRow } from '../../lib/adminApi'
+import { fetchAllUsers, computeUserStatus, computeSignupGrowth, type AdminUserRow } from '../../lib/adminApi'
+import { SignupGrowthChart } from './SignupGrowthChart'
 
 function StatCard({ label, value, color }: { label: string; value: number; color?: string }) {
   return (
@@ -46,6 +47,8 @@ export function AdminDashboardTab() {
     [users],
   )
 
+  const growth = useMemo(() => computeSignupGrowth(users), [users])
+
   if (loading) return <p className="text-center text-t3 text-[13px] mt-10">جارٍ التحميل...</p>
   if (error) return <p className="text-center text-err text-[13px] mt-10">{error}</p>
 
@@ -57,6 +60,8 @@ export function AdminDashboardTab() {
         <StatCard label="غير نشطين" value={counts.inactive} color="var(--color-t2)" />
         <StatCard label="لم يكملوا الإعداد" value={counts.incomplete} color="var(--color-warn)" />
       </div>
+
+      <SignupGrowthChart points={growth} />
 
       {incompleteUsers.length > 0 && (
         <div className="bg-s1 border border-bd p-4">
