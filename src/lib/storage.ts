@@ -11,14 +11,14 @@ function dataUrlToBlob(dataUrl: string): { blob: Blob; ext: string } {
   return { blob: new Blob([bytes], { type: mime }), ext }
 }
 
-/** يرفع صورة (data URL) إلى مجلد المستخدم الحالي بمخزن club-media، ويرجّع الرابط العام */
+/** يرفع صورة (data URL) إلى مجلد النادي النشط حالياً بمخزن club-media، ويرجّع الرابط العام */
 export async function uploadImage(path: string, dataUrl: string): Promise<string> {
   if (!supabase) throw new Error('الخدمة السحابية غير مُفعّلة')
-  const userId = useAuthStore.getState().user?.id
-  if (!userId) throw new Error('يجب تسجيل الدخول أولاً')
+  const clubId = useAuthStore.getState().activeClubId
+  if (!clubId) throw new Error('يجب تسجيل الدخول أولاً')
 
   const { blob, ext } = dataUrlToBlob(dataUrl)
-  const fullPath = `${userId}/${path}.${ext}`
+  const fullPath = `${clubId}/${path}.${ext}`
 
   const { error } = await supabase.storage.from('club-media').upload(fullPath, blob, {
     upsert: true,

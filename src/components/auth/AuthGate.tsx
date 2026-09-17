@@ -6,6 +6,7 @@ import { useMatchesStore } from '../../store/useMatchesStore'
 import { useTrainingStore } from '../../store/useTrainingStore'
 import { checkAndOfferLocalImport } from '../../lib/importLocalData'
 import { migrateClubImagesToStorage } from '../../lib/imageMigration'
+import { subscribeToClubChanges } from '../../lib/collaboration'
 import { fetchAppSettings, type AppSettings } from '../../lib/adminApi'
 import { Logo } from '../brand/Logo'
 import { LoginScreen } from './LoginScreen'
@@ -33,36 +34,42 @@ function MaintenanceScreen() {
 }
 
 export function AuthGate({ children }: { children: ReactNode }) {
-  const { session, user, loading, isAdmin } = useAuthStore()
+  const { session, user, loading, isAdmin, activeClubId } = useAuthStore()
   const [dataReady, setDataReady] = useState(false)
   const [settings, setSettings] = useState<AppSettings | null>(null)
 
+  // إعداد لمرة واحدة لكل تسجيل دخول: الإعدادات العامة + عرض استيراد البيانات المحلية
   useEffect(() => {
-    if (!session || !user) {
+    if (!session || !user) return
+    fetchAppSettings().then(setSettings)
+    checkAndOfferLocalImport(user.id)
+  }, [session, user])
+
+  // ترطيب المتاجر من النادي النشط + اشتراك لحظي — يُعاد عند أي تبديل للنادي (دعوة/تسجيل دخول)
+  useEffect(() => {
+    if (!activeClubId) {
       setDataReady(false)
       return
     }
     let cancelled = false
+    setDataReady(false)
     ;(async () => {
-      const [, appSettings] = await Promise.all([
-        Promise.all([
-          useClubStore.persist.rehydrate(),
-          useMatchesStore.persist.rehydrate(),
-          useTrainingStore.persist.rehydrate(),
-        ]),
-        fetchAppSettings(),
+      await Promise.all([
+        useClubStore.persist.rehydrate(),
+        useMatchesStore.persist.rehydrate(),
+        useTrainingStore.persist.rehydrate(),
       ])
-      await checkAndOfferLocalImport(user.id)
       if (!cancelled) {
-        setSettings(appSettings)
         setDataReady(true)
+        migrateClubImagesToStorage().catch((e) => console.error('[imageMigration] فشل', e))
       }
-      migrateClubImagesToStorage().catch((e) => console.error('[imageMigration] فشل', e))
     })()
+    const unsubscribe = subscribeToClubChanges(activeClubId)
     return () => {
       cancelled = true
+      unsubscribe()
     }
-  }, [session, user])
+  }, [activeClubId])
 
   if (loading) return <Splash />
   if (!session) return <LoginScreen />

@@ -2,16 +2,16 @@ import type { StateStorage } from 'zustand/middleware'
 import { supabase } from './supabase'
 import { useAuthStore } from '../store/useAuthStore'
 
-/** مهايئ تخزين لـ Zustand persist يقرأ/يكتب في جدول app_state بدل localStorage، معزولاً حسب هوية المستخدم الحالي */
+/** مهايئ تخزين لـ Zustand persist يقرأ/يكتب في جدول app_state بدل localStorage، معزولاً حسب النادي النشط حالياً (نفسك أو نادٍ دُعيت إليه) */
 export const supabaseStorage: StateStorage = {
   getItem: async (name) => {
-    const userId = useAuthStore.getState().user?.id
-    if (!supabase || !userId) return null
+    const clubId = useAuthStore.getState().activeClubId
+    if (!supabase || !clubId) return null
 
     const { data, error } = await supabase
       .from('app_state')
       .select('data')
-      .eq('user_id', userId)
+      .eq('user_id', clubId)
       .eq('store_name', name)
       .maybeSingle()
 
@@ -24,11 +24,11 @@ export const supabaseStorage: StateStorage = {
   },
 
   setItem: async (name, value) => {
-    const userId = useAuthStore.getState().user?.id
-    if (!supabase || !userId) return
+    const clubId = useAuthStore.getState().activeClubId
+    if (!supabase || !clubId) return
 
     const { error } = await supabase.from('app_state').upsert({
-      user_id: userId,
+      user_id: clubId,
       store_name: name,
       data: JSON.parse(value),
       updated_at: new Date().toISOString(),
@@ -37,10 +37,10 @@ export const supabaseStorage: StateStorage = {
   },
 
   removeItem: async (name) => {
-    const userId = useAuthStore.getState().user?.id
-    if (!supabase || !userId) return
+    const clubId = useAuthStore.getState().activeClubId
+    if (!supabase || !clubId) return
 
-    const { error } = await supabase.from('app_state').delete().eq('user_id', userId).eq('store_name', name)
+    const { error } = await supabase.from('app_state').delete().eq('user_id', clubId).eq('store_name', name)
     if (error) console.error(`[supabaseStorage] فشل حذف "${name}":`, error.message)
   },
 }
