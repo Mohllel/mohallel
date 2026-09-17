@@ -16,6 +16,17 @@ export function SetupScreen() {
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [selectedPlayers, setSelectedPlayers] = useState<Set<string>>(new Set(players.map((p) => p.id)))
 
+  const availableCompetitions = competitions.filter(
+    (c) => !c.eligibleOpponentIds?.length || (opponentId && c.eligibleOpponentIds.includes(opponentId)),
+  )
+
+  const handleOpponentChange = (id: string) => {
+    setOpponentId(id)
+    if (!competitions.find((c) => c.id === competitionId && (!c.eligibleOpponentIds?.length || c.eligibleOpponentIds.includes(id)))) {
+      setCompetitionId('')
+    }
+  }
+
   const togglePlayer = (id: string) => {
     setSelectedPlayers((prev) => {
       const next = new Set(prev)
@@ -67,7 +78,7 @@ export function SetupScreen() {
       <div className="bg-s1 border border-bd rounded-2xl p-4 mb-3">
         <div className="text-[14px] font-extrabold mb-3">⚡ المنافس</div>
         <label className="block text-[11px] text-t2 mb-1 font-bold">اختر الفريق المنافس</label>
-        <select value={opponentId} onChange={(e) => setOpponentId(e.target.value)} className="mb-2">
+        <select value={opponentId} onChange={(e) => handleOpponentChange(e.target.value)} className="mb-2">
           <option value="">— اختر —</option>
           {opponentPresets.map((p) => (
             <option key={p.id} value={p.id}>
@@ -87,12 +98,12 @@ export function SetupScreen() {
         <label className="block text-[11px] text-t2 mb-1 font-bold">التاريخ</label>
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="mb-2" />
 
-        {competitions.length > 0 && (
+        {availableCompetitions.length > 0 && (
           <>
             <label className="block text-[11px] text-t2 mb-1 font-bold">المسابقة (اختياري)</label>
             <select value={competitionId} onChange={(e) => setCompetitionId(e.target.value)}>
               <option value="">— بلا مسابقة —</option>
-              {competitions.map((c) => (
+              {availableCompetitions.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
                 </option>

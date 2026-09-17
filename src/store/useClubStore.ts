@@ -46,6 +46,7 @@ interface ClubActions {
 
   addCompetitionPreset: (name: string) => string
   removeCompetitionPreset: (id: string) => void
+  toggleCompetitionOpponent: (competitionId: string, opponentId: string) => void
 }
 
 type Store = ClubProfile & ClubActions
@@ -137,6 +138,17 @@ export const useClubStore = create<Store>()(
       },
       removeCompetitionPreset: (id) =>
         set((st) => ({ competitions: st.competitions.filter((c) => c.id !== id) })),
+      toggleCompetitionOpponent: (competitionId, opponentId) =>
+        set((st) => ({
+          competitions: st.competitions.map((c) => {
+            if (c.id !== competitionId) return c
+            const current = c.eligibleOpponentIds ?? []
+            const eligibleOpponentIds = current.includes(opponentId)
+              ? current.filter((id) => id !== opponentId)
+              : [...current, opponentId]
+            return { ...c, eligibleOpponentIds }
+          }),
+        })),
     }),
     {
       name: 'mohallel-club',

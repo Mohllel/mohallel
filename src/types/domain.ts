@@ -87,6 +87,8 @@ export interface OpponentPreset {
 export interface CompetitionPreset {
   id: string
   name: string
+  /** يحصر المسابقة بأندية معيّنة (مراجع OpponentPreset) — فارغة/غير معرّفة يعني بلا حصر، تظهر لأي منافس */
+  eligibleOpponentIds?: string[]
 }
 
 export interface ClubColors {
