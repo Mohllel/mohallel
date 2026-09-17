@@ -4,6 +4,7 @@ import { useRef, useState } from 'react'
 import { useClubStore } from '../../store/useClubStore'
 import { enhancePlayerPhoto } from '../../lib/aiPhoto'
 import { isCloudEnabled } from '../../lib/supabase'
+import { uploadImage } from '../../lib/storage'
 import { PLAYER_POSITIONS, PLAYER_POSITION_LABELS } from '../../lib/playerPositions'
 
 interface PlayerChipProps {
@@ -26,6 +27,7 @@ export function PlayerChip({
   const inputRef = useRef<HTMLInputElement>(null)
   const jerseyPhoto = useClubStore((s) => s.jerseyPhoto)
   const [enhancing, setEnhancing] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [bioOpen, setBioOpen] = useState(false)
 
   const handleEnhance = async () => {
@@ -33,12 +35,31 @@ export function PlayerChip({
     setEnhancing(true)
     try {
       const result = await enhancePlayerPhoto(player.photo, jerseyPhoto)
-      onPhoto(result)
+      const url = await uploadImage(`players/${player.id}`, result)
+      onPhoto(url)
     } catch (e) {
       alert(e instanceof Error ? e.message : 'فشل توليد الصورة')
     } finally {
       setEnhancing(false)
     }
+  }
+
+  const handleUpload = (file: File | undefined) => {
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = async (ev) => {
+      if (typeof ev.target?.result !== 'string') return
+      setUploading(true)
+      try {
+        const url = await uploadImage(`players/${player.id}`, ev.target.result)
+        onPhoto(url)
+      } catch (e) {
+        alert(e instanceof Error ? e.message : 'فشل رفع الصورة')
+      } finally {
+        setUploading(false)
+      }
+    }
+    reader.readAsDataURL(file)
   }
 
   return (
@@ -52,9 +73,9 @@ export function PlayerChip({
 
       <div onClick={() => inputRef.current?.click()} className="cursor-pointer relative">
         <Avatar name={player.name} photo={player.photo} size={64} />
-        {enhancing && (
+        {(enhancing || uploading) && (
           <div className="absolute inset-0 rounded-full bg-bg/70 flex items-center justify-center text-[10px] animate-pulse">
-            ✨
+            {enhancing ? '✨' : '...'}
           </div>
         )}
         <input
@@ -62,15 +83,7 @@ export function PlayerChip({
           type="file"
           accept="image/*"
           className="hidden"
-          onChange={(e) => {
-            const file = e.target.files?.[0]
-            if (!file) return
-            const reader = new FileReader()
-            reader.onload = (ev) => {
-              if (typeof ev.target?.result === 'string') onPhoto(ev.target.result)
-            }
-            reader.readAsDataURL(file)
-          }}
+          onChange={(e) => handleUpload(e.target.files?.[0])}
         />
       </div>
 
