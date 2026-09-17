@@ -1,4 +1,6 @@
+import { Link } from 'react-router-dom'
 import { useClubStore } from '../../store/useClubStore'
+import { useAuthStore } from '../../store/useAuthStore'
 import { LogoUpload } from '../shared/LogoUpload'
 import { HeaderImageUpload } from '../shared/HeaderImageUpload'
 import { OpponentsSection } from './OpponentsSection'
@@ -23,10 +25,21 @@ export function SettingsScreen() {
     setColors,
     toggleIsPro,
   } = useClubStore()
+  const { user, isAdmin, signOut } = useAuthStore()
 
   return (
     <div className="p-4 animate-[fadeIn_.3s_ease]">
       <h2 className="text-[18px] font-black mb-3">⚙ لوحة التحكم</h2>
+
+      {isAdmin && (
+        <Link
+          to="/admin"
+          className="flex items-center justify-between bg-pri text-white rounded-2xl p-4 mb-3 font-extrabold text-[14px]"
+        >
+          🛠 لوحة المطوّر
+          <span>←</span>
+        </Link>
+      )}
 
       <div className="bg-s1 border border-bd rounded-2xl p-4 mb-3">
         <div className="text-[14px] font-extrabold mb-3">الملف الشخصي</div>
@@ -86,6 +99,16 @@ export function SettingsScreen() {
           <span
             className={`absolute top-1 w-6 h-6 rounded-full bg-white transition-all ${isPro ? 'right-1' : 'right-7'}`}
           />
+        </button>
+      </div>
+
+      <div className="bg-s1 border border-bd rounded-2xl p-4 mb-3 flex items-center justify-between">
+        <div>
+          <div className="text-[14px] font-extrabold">الحساب</div>
+          <div className="text-[10px] text-t3 mt-0.5">{user?.email}</div>
+        </div>
+        <button onClick={signOut} className="px-4 py-2 bg-err/10 text-err rounded-lg font-extrabold text-[13px]">
+          تسجيل الخروج
         </button>
       </div>
     </div>

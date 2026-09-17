@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { createJSONStorage, persist } from 'zustand/middleware'
+import { supabaseStorage } from '../lib/supabaseStorage'
 import { applyPoint, emptyRotation, otherSide, pointSideForAction, rotateSlots } from '../lib/scoring'
 import type {
   Action,
@@ -536,6 +537,8 @@ export const useMatchesStore = create<Store>()(
     }),
     {
       name: 'mohallel-matches',
+      storage: createJSONStorage(() => supabaseStorage),
+      skipHydration: true,
       version: 1,
       partialize: (st): MatchesStoreState => ({ matches: st.matches, _undoIds: {}, _undoEventIds: {} }),
       migrate: (persisted) => migrateMatchesState(persisted),

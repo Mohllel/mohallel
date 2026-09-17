@@ -1,5 +1,6 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { createJSONStorage, persist } from 'zustand/middleware'
+import { supabaseStorage } from '../lib/supabaseStorage'
 import type { Quality, SkillKey, TrainingSession } from '../types/domain'
 
 const uid = () => Math.random().toString(36).slice(2, 11)
@@ -75,6 +76,10 @@ export const useTrainingStore = create<Store>()(
       },
       lastRepId: (sessionId) => get()._undoIds[sessionId] ?? null,
     }),
-    { name: 'mohallel-training' },
+    {
+      name: 'mohallel-training',
+      storage: createJSONStorage(() => supabaseStorage),
+      skipHydration: true,
+    },
   ),
 )
