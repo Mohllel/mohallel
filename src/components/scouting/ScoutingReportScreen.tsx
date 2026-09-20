@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { useClubStore } from '../../store/useClubStore'
+import { useReferenceDataStore } from '../../store/useReferenceDataStore'
 import { useMatchesStore } from '../../store/useMatchesStore'
 import { buildScoutingReport } from '../../lib/scouting'
 import { ZoneHeatmap } from '../analytics/ZoneHeatmap'
@@ -7,7 +8,8 @@ import { ZoneHeatmap } from '../analytics/ZoneHeatmap'
 export function ScoutingReportScreen() {
   const { presetId } = useParams<{ presetId: string }>()
   const navigate = useNavigate()
-  const { opponentPresets, opponentRosters, isPro } = useClubStore()
+  const { opponentRosters, isPro } = useClubStore()
+  const { clubs: opponentPresets } = useReferenceDataStore()
   const { matches } = useMatchesStore()
 
   const preset = opponentPresets.find((p) => p.id === presetId)

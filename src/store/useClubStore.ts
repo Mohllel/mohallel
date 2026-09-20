@@ -15,9 +15,7 @@ const initialState: ClubProfile = {
   colors: { pri: '#0ea5e9', sec: '#f97316' },
   isPro: false,
   players: [],
-  opponentPresets: [],
   opponentRosters: {},
-  competitions: [],
 }
 
 interface ClubActions {
@@ -37,16 +35,9 @@ interface ClubActions {
   setPlayerPosition: (id: string, position: Player['position']) => void
   setPlayerBio: (id: string, bio: string) => void
 
-  addOpponentPreset: (name: string, logo?: string | null) => string
-  removeOpponentPreset: (id: string) => void
-  setOpponentPresetLogo: (id: string, logo: string | null) => void
-
+  /** presetId هنا معرّف نادٍ مرجعي عام (من reference_clubs) — روستر المنافس يبقى بيانات خاصة بحساب هذا النادي فقط */
   addOpponentPlayer: (presetId: string, name: string, number?: number) => void
   removeOpponentPlayer: (presetId: string, playerId: string) => void
-
-  addCompetitionPreset: (name: string) => string
-  removeCompetitionPreset: (id: string) => void
-  toggleCompetitionOpponent: (competitionId: string, opponentId: string) => void
 }
 
 type Store = ClubProfile & ClubActions
@@ -100,23 +91,6 @@ export const useClubStore = create<Store>()(
       setPlayerBio: (id, bio) =>
         set((st) => ({ players: st.players.map((p) => (p.id === id ? { ...p, bio } : p)) })),
 
-      addOpponentPreset: (name, logo = null) => {
-        const id = uid()
-        set((st) => ({ opponentPresets: [...st.opponentPresets, { id, name, logo }] }))
-        return id
-      },
-      removeOpponentPreset: (id) =>
-        set((st) => ({
-          opponentPresets: st.opponentPresets.filter((p) => p.id !== id),
-          opponentRosters: Object.fromEntries(
-            Object.entries(st.opponentRosters).filter(([pid]) => pid !== id),
-          ),
-        })),
-      setOpponentPresetLogo: (id, logo) =>
-        set((st) => ({
-          opponentPresets: st.opponentPresets.map((p) => (p.id === id ? { ...p, logo } : p)),
-        })),
-
       addOpponentPlayer: (presetId, name, number) =>
         set((st) => {
           const roster = st.opponentRosters[presetId] ?? []
@@ -130,25 +104,6 @@ export const useClubStore = create<Store>()(
             opponentRosters: { ...st.opponentRosters, [presetId]: roster.filter((p) => p.id !== playerId) },
           }
         }),
-
-      addCompetitionPreset: (name) => {
-        const id = uid()
-        set((st) => ({ competitions: [...st.competitions, { id, name }] }))
-        return id
-      },
-      removeCompetitionPreset: (id) =>
-        set((st) => ({ competitions: st.competitions.filter((c) => c.id !== id) })),
-      toggleCompetitionOpponent: (competitionId, opponentId) =>
-        set((st) => ({
-          competitions: st.competitions.map((c) => {
-            if (c.id !== competitionId) return c
-            const current = c.eligibleOpponentIds ?? []
-            const eligibleOpponentIds = current.includes(opponentId)
-              ? current.filter((id) => id !== opponentId)
-              : [...current, opponentId]
-            return { ...c, eligibleOpponentIds }
-          }),
-        })),
     }),
     {
       name: 'mohallel-club',

@@ -78,12 +78,14 @@ export interface TrainingSession {
   reps: Action[]
 }
 
+/** بيانات مرجعية موحّدة على مستوى المنصة (جدول reference_clubs) — يديرها المطوّر، تُقرأ من كل حسابات النادي */
 export interface OpponentPreset {
   id: string
   name: string
   logo: string | null
 }
 
+/** بيانات مرجعية موحّدة على مستوى المنصة (جدول reference_competitions) — يديرها المطوّر */
 export interface CompetitionPreset {
   id: string
   name: string
@@ -110,10 +112,8 @@ export interface ClubProfile {
   /** مفتاح تطوير محلي — بلا بوابة دفع حقيقية بعد */
   isPro: boolean
   players: Player[]
-  opponentPresets: OpponentPreset[]
-  /** لاعبو كل منافس محفوظ — ميزة مدفوعة (Pro) */
+  /** لاعبو كل منافس محفوظ (يُقصد بالمفتاح معرّف نادٍ مرجعي عام) — ميزة مدفوعة (Pro) */
   opponentRosters: Record<string, Player[]>
-  competitions: CompetitionPreset[]
 }
 
 export interface Match {

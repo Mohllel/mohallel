@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom'
 import { useClubStore } from '../../store/useClubStore'
+import { useReferenceDataStore } from '../../store/useReferenceDataStore'
 import { useMatchesStore } from '../../store/useMatchesStore'
 import { countSetWins } from '../../lib/scoring'
 
 export function ReportsListScreen() {
   const { matches } = useMatchesStore()
-  const { clubName, competitions } = useClubStore()
+  const { clubName } = useClubStore()
+  const { competitions } = useReferenceDataStore()
   const list = Object.values(matches)
     .filter((m) => m.status !== 'scheduled')
     .sort((a, b) => b.createdAt - a.createdAt)

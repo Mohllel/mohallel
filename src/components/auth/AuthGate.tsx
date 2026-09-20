@@ -8,6 +8,9 @@ import { checkAndOfferLocalImport } from '../../lib/importLocalData'
 import { migrateClubImagesToStorage } from '../../lib/imageMigration'
 import { subscribeToClubChanges } from '../../lib/collaboration'
 import { fetchAppSettings, type AppSettings } from '../../lib/adminApi'
+import { useReferenceDataStore } from '../../store/useReferenceDataStore'
+import { useFeatureFlagsStore } from '../../store/useFeatureFlagsStore'
+import { installErrorReporting } from '../../lib/errorReporting'
 import { Logo } from '../brand/Logo'
 import { LoginScreen } from './LoginScreen'
 
@@ -38,10 +41,13 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const [dataReady, setDataReady] = useState(false)
   const [settings, setSettings] = useState<AppSettings | null>(null)
 
-  // إعداد لمرة واحدة لكل تسجيل دخول: الإعدادات العامة + عرض استيراد البيانات المحلية
+  // إعداد لمرة واحدة لكل تسجيل دخول: الإعدادات العامة + البيانات المرجعية + عرض استيراد البيانات المحلية
   useEffect(() => {
     if (!session || !user) return
     fetchAppSettings().then(setSettings)
+    useReferenceDataStore.getState().refresh()
+    useFeatureFlagsStore.getState().refresh()
+    installErrorReporting()
     checkAndOfferLocalImport(user.id)
   }, [session, user])
 

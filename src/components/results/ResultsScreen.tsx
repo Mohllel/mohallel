@@ -1,15 +1,16 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useClubStore } from '../../store/useClubStore'
+import { useReferenceDataStore } from '../../store/useReferenceDataStore'
 import { useMatchesStore } from '../../store/useMatchesStore'
 import { countSetWins, isMatchDecided } from '../../lib/scoring'
 
 export function ResultsScreen() {
   const { matches, createScheduledMatch, deleteMatch } = useMatchesStore()
-  const { clubName, opponentPresets, addOpponentPreset, competitions } = useClubStore()
+  const { clubName } = useClubStore()
+  const { clubs: opponentPresets, competitions } = useReferenceDataStore()
   const [showAdd, setShowAdd] = useState(false)
   const [opponentId, setOpponentId] = useState('')
-  const [newOpponentName, setNewOpponentName] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [competitionId, setCompetitionId] = useState('')
 
@@ -17,7 +18,7 @@ export function ResultsScreen() {
   const scheduled = all.filter((m) => m.status === 'scheduled').sort((a, b) => a.date.localeCompare(b.date))
   const finished = all.filter((m) => m.status === 'finished').sort((a, b) => b.createdAt - a.createdAt)
 
-  const canAdd = opponentId === '__new__' ? newOpponentName.trim().length > 0 : opponentId !== ''
+  const canAdd = opponentId !== ''
 
   const availableCompetitions = competitions.filter(
     (c) => !c.eligibleOpponentIds?.length || (opponentId && c.eligibleOpponentIds.includes(opponentId)),
@@ -31,24 +32,11 @@ export function ResultsScreen() {
   }
 
   const handleAdd = () => {
-    let opponentName = ''
-    let opponentLogo: string | null = null
-    let presetId: string | null = null
-    if (opponentId === '__new__') {
-      opponentName = newOpponentName.trim()
-      if (!opponentName) return
-      presetId = addOpponentPreset(opponentName)
-    } else {
-      const preset = opponentPresets.find((p) => p.id === opponentId)
-      if (!preset) return
-      opponentName = preset.name
-      opponentLogo = preset.logo
-      presetId = preset.id
-    }
-    createScheduledMatch(opponentName, opponentLogo, presetId, date, competitionId || null)
+    const preset = opponentPresets.find((p) => p.id === opponentId)
+    if (!preset) return
+    createScheduledMatch(preset.name, preset.logo, preset.id, date, competitionId || null)
     setShowAdd(false)
     setOpponentId('')
-    setNewOpponentName('')
     setDate(new Date().toISOString().split('T')[0])
     setCompetitionId('')
   }
@@ -75,16 +63,7 @@ export function ResultsScreen() {
                 {p.name}
               </option>
             ))}
-            <option value="__new__">+ فريق جديد…</option>
           </select>
-          {opponentId === '__new__' && (
-            <input
-              value={newOpponentName}
-              onChange={(e) => setNewOpponentName(e.target.value)}
-              placeholder="اسم الفريق المنافس"
-              className="mb-2"
-            />
-          )}
           <label className="block text-[11px] text-t2 mb-1 font-bold">تاريخ المباراة</label>
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="mb-2" />
           {availableCompetitions.length > 0 && (
