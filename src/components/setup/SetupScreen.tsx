@@ -12,19 +12,23 @@ export function SetupScreen() {
   const { clubs: opponentPresets, competitions } = useReferenceDataStore()
   const { createMatch } = useMatchesStore()
 
-  const [opponentId, setOpponentId] = useState<string>('')
   const [competitionId, setCompetitionId] = useState<string>('')
+  const [round, setRound] = useState('')
+  const [opponentId, setOpponentId] = useState<string>('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const [venue, setVenue] = useState('')
   const [selectedPlayers, setSelectedPlayers] = useState<Set<string>>(new Set(players.map((p) => p.id)))
 
-  const availableCompetitions = competitions.filter(
-    (c) => !c.eligibleOpponentIds?.length || (opponentId && c.eligibleOpponentIds.includes(opponentId)),
-  )
+  const selectedCompetition = competitions.find((c) => c.id === competitionId) ?? null
+  const availableOpponents = selectedCompetition?.eligibleOpponentIds?.length
+    ? opponentPresets.filter((p) => selectedCompetition.eligibleOpponentIds!.includes(p.id))
+    : opponentPresets
 
-  const handleOpponentChange = (id: string) => {
-    setOpponentId(id)
-    if (!competitions.find((c) => c.id === competitionId && (!c.eligibleOpponentIds?.length || c.eligibleOpponentIds.includes(id)))) {
-      setCompetitionId('')
+  const handleCompetitionChange = (id: string) => {
+    setCompetitionId(id)
+    const competition = competitions.find((c) => c.id === id)
+    if (competition?.eligibleOpponentIds?.length && !competition.eligibleOpponentIds.includes(opponentId)) {
+      setOpponentId('')
     }
   }
 
@@ -47,6 +51,8 @@ export function SetupScreen() {
       date,
       Array.from(selectedPlayers),
       competitionId || null,
+      round.trim() || null,
+      venue.trim() || null,
     )
     navigate(`/match/${id}/live`)
   }
@@ -63,11 +69,29 @@ export function SetupScreen() {
       </div>
 
       <div className="bg-s1 border border-bd rounded-2xl p-4 mb-3">
-        <div className="text-[14px] font-extrabold mb-3">⚡ المنافس</div>
-        <label className="block text-[11px] text-t2 mb-1 font-bold">اختر الفريق المنافس</label>
-        <select value={opponentId} onChange={(e) => handleOpponentChange(e.target.value)} className="mb-2">
+        <div className="text-[14px] font-extrabold mb-3">⚡ تفاصيل المباراة</div>
+
+        {competitions.length > 0 && (
+          <>
+            <label className="block text-[11px] text-t2 mb-1 font-bold">اسم المسابقة (اختياري)</label>
+            <select value={competitionId} onChange={(e) => handleCompetitionChange(e.target.value)} className="mb-2">
+              <option value="">— بلا مسابقة —</option>
+              {competitions.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </>
+        )}
+
+        <label className="block text-[11px] text-t2 mb-1 font-bold">الجولة (اختياري)</label>
+        <input value={round} onChange={(e) => setRound(e.target.value)} placeholder="مثال: الجولة الثالثة" className="mb-2" />
+
+        <label className="block text-[11px] text-t2 mb-1 font-bold">الفريق المنافس</label>
+        <select value={opponentId} onChange={(e) => setOpponentId(e.target.value)} className="mb-2">
           <option value="">— اختر —</option>
-          {opponentPresets.map((p) => (
+          {availableOpponents.map((p) => (
             <option key={p.id} value={p.id}>
               {p.name}
             </option>
@@ -78,22 +102,12 @@ export function SetupScreen() {
             لا توجد أندية بعد — اطلب من المطوّر إضافتها من لوحة التحكم.
           </p>
         )}
+
         <label className="block text-[11px] text-t2 mb-1 font-bold">التاريخ</label>
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="mb-2" />
 
-        {availableCompetitions.length > 0 && (
-          <>
-            <label className="block text-[11px] text-t2 mb-1 font-bold">المسابقة (اختياري)</label>
-            <select value={competitionId} onChange={(e) => setCompetitionId(e.target.value)}>
-              <option value="">— بلا مسابقة —</option>
-              {availableCompetitions.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </>
-        )}
+        <label className="block text-[11px] text-t2 mb-1 font-bold">الملعب (اختياري)</label>
+        <input value={venue} onChange={(e) => setVenue(e.target.value)} placeholder="اسم الملعب أو المكان" />
 
         {opponentId && (
           <Link

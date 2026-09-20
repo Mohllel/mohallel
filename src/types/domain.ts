@@ -126,6 +126,10 @@ export interface Match {
   opponentPresetId: string | null
   /** يربط المباراة ببطولة محفوظة في ClubProfile.competitions */
   competitionId: string | null
+  /** رقم/اسم الجولة ضمن المسابقة (اختياري، نص حر) */
+  round?: string | null
+  /** اسم أو مكان الملعب (اختياري، نص حر) */
+  venue?: string | null
   /** لاعبو النادي المشاركون بهذه المباراة (مرجع إلى ClubProfile.players) */
   playerIds: string[]
   mode: LiveMode
