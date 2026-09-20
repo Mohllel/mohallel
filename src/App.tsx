@@ -33,14 +33,15 @@ function App() {
 
 function AuthenticatedApp() {
   const colors = useClubStore((s) => s.colors)
-  const { isAdmin, viewMode } = useAuthStore()
+  const { isAdmin } = useAuthStore()
 
   useEffect(() => {
     document.documentElement.style.setProperty('--color-pri', colors.pri)
     document.documentElement.style.setProperty('--color-sec', colors.sec)
   }, [colors])
 
-  if (isAdmin && viewMode === 'admin') {
+  /** حساب المطوّر منفصل تماماً — لا يصل أبداً لواجهة النادي/المشترك، بلا استثناء */
+  if (isAdmin) {
     return (
       <Routes>
         <Route path="/admin" element={<AdminScreen />} />
@@ -67,7 +68,6 @@ function AuthenticatedApp() {
       <Route path="/scouting/:presetId" element={<ScoutingReportScreen />} />
       <Route path="/training/new" element={<NewTrainingScreen />} />
       <Route path="/training/:id" element={<TrainingSessionScreen />} />
-      <Route path="/admin" element={<AdminScreen />} />
     </Routes>
   )
 }
