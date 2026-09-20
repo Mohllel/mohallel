@@ -82,6 +82,8 @@ interface MatchesActions {
     date: string,
     playerIds: string[],
     competitionId?: string | null,
+    round?: string | null,
+    venue?: string | null,
   ) => string
   /** يحجز مباراة بتاريخ مستقبلي بلا لاعبين بعد — تظهر كـ"المباراة القادمة" بالصفحة الرئيسية */
   createScheduledMatch: (
@@ -90,6 +92,8 @@ interface MatchesActions {
     opponentPresetId: string | null,
     date: string,
     competitionId?: string | null,
+    round?: string | null,
+    venue?: string | null,
   ) => string
   /** يحوّل مباراة محجوزة إلى مباراة حيّة بعد اختيار لاعبي اليوم */
   startScheduledMatch: (id: string, playerIds: string[]) => void
@@ -145,7 +149,16 @@ export const useMatchesStore = create<Store>()(
       _undoIds: {},
       _undoEventIds: {},
 
-      createMatch: (opponentName, opponentLogo, opponentPresetId, date, playerIds, competitionId = null) => {
+      createMatch: (
+        opponentName,
+        opponentLogo,
+        opponentPresetId,
+        date,
+        playerIds,
+        competitionId = null,
+        round = null,
+        venue = null,
+      ) => {
         const id = uid()
         const match: Match = {
           id,
@@ -155,6 +168,8 @@ export const useMatchesStore = create<Store>()(
           opponentLogo,
           opponentPresetId,
           competitionId,
+          round,
+          venue,
           playerIds,
           mode: 'grid',
           set: 1,
@@ -170,7 +185,15 @@ export const useMatchesStore = create<Store>()(
         set((st) => ({ matches: { ...st.matches, [id]: match } }))
         return id
       },
-      createScheduledMatch: (opponentName, opponentLogo, opponentPresetId, date, competitionId = null) => {
+      createScheduledMatch: (
+        opponentName,
+        opponentLogo,
+        opponentPresetId,
+        date,
+        competitionId = null,
+        round = null,
+        venue = null,
+      ) => {
         const id = uid()
         const match: Match = {
           id,
@@ -180,6 +203,8 @@ export const useMatchesStore = create<Store>()(
           opponentLogo,
           opponentPresetId,
           competitionId,
+          round,
+          venue,
           playerIds: [],
           mode: 'grid',
           set: 1,

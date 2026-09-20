@@ -35,9 +35,15 @@ export function ReportsListScreen() {
               </span>
               <span className="text-[11px] text-t3">{m.date}</span>
             </div>
-            {m.competitionId && competitions.find((c) => c.id === m.competitionId) && (
-              <div className="text-[10px] text-t3 mb-1">🏆 {competitions.find((c) => c.id === m.competitionId)!.name}</div>
-            )}
+            {(() => {
+              const competition = m.competitionId ? competitions.find((c) => c.id === m.competitionId) : null
+              const extras = [
+                competition ? `🏆 ${competition.name}` : null,
+                m.round ? `🔢 ${m.round}` : null,
+                m.venue ? `📍 ${m.venue}` : null,
+              ].filter(Boolean)
+              return extras.length > 0 && <div className="text-[10px] text-t3 mb-1">{extras.join(' · ')}</div>
+            })()}
             <div className="flex items-center justify-between">
               <span className="text-[16px] font-black text-pri">
                 {setsA} : {setsB}
