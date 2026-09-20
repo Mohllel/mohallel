@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
-import type { ClubProfile, OpponentPreset, Player } from '../types/domain'
+import type { ClubProfile, CompetitionPreset, OpponentPreset, Player } from '../types/domain'
 import { supabaseStorage } from '../lib/supabaseStorage'
 
 const uid = () => Math.random().toString(36).slice(2, 11)
@@ -17,6 +17,7 @@ const initialState: ClubProfile = {
   players: [],
   opponentPresets: [],
   opponentRosters: {},
+  competitions: [],
 }
 
 interface ClubActions {
@@ -42,6 +43,10 @@ interface ClubActions {
 
   addOpponentPlayer: (presetId: string, name: string, number?: number) => void
   removeOpponentPlayer: (presetId: string, playerId: string) => void
+
+  addCompetitionPreset: (name: string) => string
+  removeCompetitionPreset: (id: string) => void
+  toggleCompetitionOpponent: (competitionId: string, opponentId: string) => void
 }
 
 type Store = ClubProfile & ClubActions
@@ -125,6 +130,25 @@ export const useClubStore = create<Store>()(
             opponentRosters: { ...st.opponentRosters, [presetId]: roster.filter((p) => p.id !== playerId) },
           }
         }),
+
+      addCompetitionPreset: (name) => {
+        const id = uid()
+        set((st) => ({ competitions: [...st.competitions, { id, name }] }))
+        return id
+      },
+      removeCompetitionPreset: (id) =>
+        set((st) => ({ competitions: st.competitions.filter((c) => c.id !== id) })),
+      toggleCompetitionOpponent: (competitionId, opponentId) =>
+        set((st) => ({
+          competitions: st.competitions.map((c) => {
+            if (c.id !== competitionId) return c
+            const current = c.eligibleOpponentIds ?? []
+            const eligibleOpponentIds = current.includes(opponentId)
+              ? current.filter((id) => id !== opponentId)
+              : [...current, opponentId]
+            return { ...c, eligibleOpponentIds }
+          }),
+        })),
     }),
     {
       name: 'mohallel-club',
@@ -136,4 +160,4 @@ export const useClubStore = create<Store>()(
   ),
 )
 
-export type { OpponentPreset }
+export type { OpponentPreset, CompetitionPreset }

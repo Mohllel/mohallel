@@ -84,6 +84,13 @@ export interface OpponentPreset {
   logo: string | null
 }
 
+export interface CompetitionPreset {
+  id: string
+  name: string
+  /** يحصر المسابقة بأندية معيّنة (مراجع OpponentPreset) — فارغة/غير معرّفة يعني بلا حصر، تظهر لأي منافس */
+  eligibleOpponentIds?: string[]
+}
+
 export interface ClubColors {
   pri: string
   sec: string
@@ -106,6 +113,7 @@ export interface ClubProfile {
   opponentPresets: OpponentPreset[]
   /** لاعبو كل منافس محفوظ — ميزة مدفوعة (Pro) */
   opponentRosters: Record<string, Player[]>
+  competitions: CompetitionPreset[]
 }
 
 export interface Match {
@@ -116,6 +124,8 @@ export interface Match {
   opponentLogo: string | null
   /** يربط المباراة بفريق منافس محفوظ في ClubProfile.opponentPresets — يفعّل روستر المنافس (Pro) */
   opponentPresetId: string | null
+  /** يربط المباراة ببطولة محفوظة في ClubProfile.competitions */
+  competitionId: string | null
   /** لاعبو النادي المشاركون بهذه المباراة (مرجع إلى ClubProfile.players) */
   playerIds: string[]
   mode: LiveMode

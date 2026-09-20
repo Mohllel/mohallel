@@ -6,17 +6,29 @@ import { countSetWins, isMatchDecided } from '../../lib/scoring'
 
 export function ResultsScreen() {
   const { matches, createScheduledMatch, deleteMatch } = useMatchesStore()
-  const { clubName, opponentPresets, addOpponentPreset } = useClubStore()
+  const { clubName, opponentPresets, addOpponentPreset, competitions } = useClubStore()
   const [showAdd, setShowAdd] = useState(false)
   const [opponentId, setOpponentId] = useState('')
   const [newOpponentName, setNewOpponentName] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const [competitionId, setCompetitionId] = useState('')
 
   const all = Object.values(matches)
   const scheduled = all.filter((m) => m.status === 'scheduled').sort((a, b) => a.date.localeCompare(b.date))
   const finished = all.filter((m) => m.status === 'finished').sort((a, b) => b.createdAt - a.createdAt)
 
   const canAdd = opponentId === '__new__' ? newOpponentName.trim().length > 0 : opponentId !== ''
+
+  const availableCompetitions = competitions.filter(
+    (c) => !c.eligibleOpponentIds?.length || (opponentId && c.eligibleOpponentIds.includes(opponentId)),
+  )
+
+  const handleOpponentChange = (id: string) => {
+    setOpponentId(id)
+    if (!competitions.find((c) => c.id === competitionId && (!c.eligibleOpponentIds?.length || c.eligibleOpponentIds.includes(id)))) {
+      setCompetitionId('')
+    }
+  }
 
   const handleAdd = () => {
     let opponentName = ''
@@ -33,11 +45,12 @@ export function ResultsScreen() {
       opponentLogo = preset.logo
       presetId = preset.id
     }
-    createScheduledMatch(opponentName, opponentLogo, presetId, date)
+    createScheduledMatch(opponentName, opponentLogo, presetId, date, competitionId || null)
     setShowAdd(false)
     setOpponentId('')
     setNewOpponentName('')
     setDate(new Date().toISOString().split('T')[0])
+    setCompetitionId('')
   }
 
   return (
@@ -55,7 +68,7 @@ export function ResultsScreen() {
       {showAdd && (
         <div className="bg-s1 border border-bd rounded-2xl p-4 mb-4">
           <label className="block text-[11px] text-t2 mb-1 font-bold">الفريق المنافس</label>
-          <select value={opponentId} onChange={(e) => setOpponentId(e.target.value)} className="mb-2">
+          <select value={opponentId} onChange={(e) => handleOpponentChange(e.target.value)} className="mb-2">
             <option value="">— اختر —</option>
             {opponentPresets.map((p) => (
               <option key={p.id} value={p.id}>
@@ -73,7 +86,20 @@ export function ResultsScreen() {
             />
           )}
           <label className="block text-[11px] text-t2 mb-1 font-bold">تاريخ المباراة</label>
-          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="mb-3" />
+          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="mb-2" />
+          {availableCompetitions.length > 0 && (
+            <>
+              <label className="block text-[11px] text-t2 mb-1 font-bold">المسابقة (اختياري)</label>
+              <select value={competitionId} onChange={(e) => setCompetitionId(e.target.value)} className="mb-3">
+                <option value="">— بلا مسابقة —</option>
+                {availableCompetitions.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </>
+          )}
           <button
             onClick={handleAdd}
             disabled={!canAdd}
@@ -94,7 +120,12 @@ export function ResultsScreen() {
                 <div className="text-[13px] font-extrabold">
                   {clubName || 'فريقك'} <span className="text-t3 font-normal">vs</span> {m.opponentName}
                 </div>
-                <div className="text-[10px] text-t3">{m.date}</div>
+                <div className="text-[10px] text-t3">
+                  {m.date}
+                  {m.competitionId && competitions.find((c) => c.id === m.competitionId) && (
+                    <span> · 🏆 {competitions.find((c) => c.id === m.competitionId)!.name}</span>
+                  )}
+                </div>
               </div>
               <Link to={`/match/${m.id}/start`} className="px-3 py-1.5 bg-ok text-white rounded-lg text-[11px] font-extrabold">
                 ▶ بدء
@@ -128,7 +159,12 @@ export function ResultsScreen() {
               <div className="text-[13px] font-extrabold">
                 {clubName || 'فريقك'} <span className="text-t3 font-normal">vs</span> {m.opponentName}
               </div>
-              <div className="text-[10px] text-t3">{m.date}</div>
+              <div className="text-[10px] text-t3">
+                {m.date}
+                {m.competitionId && competitions.find((c) => c.id === m.competitionId) && (
+                  <span> · 🏆 {competitions.find((c) => c.id === m.competitionId)!.name}</span>
+                )}
+              </div>
             </div>
             <span className="text-[15px] font-black">
               {setsA}:{setsB}

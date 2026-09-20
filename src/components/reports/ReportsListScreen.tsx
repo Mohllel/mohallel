@@ -5,7 +5,7 @@ import { countSetWins } from '../../lib/scoring'
 
 export function ReportsListScreen() {
   const { matches } = useMatchesStore()
-  const { clubName } = useClubStore()
+  const { clubName, competitions } = useClubStore()
   const list = Object.values(matches)
     .filter((m) => m.status !== 'scheduled')
     .sort((a, b) => b.createdAt - a.createdAt)
@@ -33,6 +33,9 @@ export function ReportsListScreen() {
               </span>
               <span className="text-[11px] text-t3">{m.date}</span>
             </div>
+            {m.competitionId && competitions.find((c) => c.id === m.competitionId) && (
+              <div className="text-[10px] text-t3 mb-1">🏆 {competitions.find((c) => c.id === m.competitionId)!.name}</div>
+            )}
             <div className="flex items-center justify-between">
               <span className="text-[16px] font-black text-pri">
                 {setsA} : {setsB}
