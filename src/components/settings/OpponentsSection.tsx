@@ -1,82 +1,54 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useClubStore } from '../../store/useClubStore'
-import { LogoUpload } from '../shared/LogoUpload'
+import { useReferenceDataStore } from '../../store/useReferenceDataStore'
 
 export function OpponentsSection() {
-  const {
-    opponentPresets,
-    isPro,
-    addOpponentPreset,
-    removeOpponentPreset,
-    setOpponentPresetLogo,
-    opponentRosters,
-    addOpponentPlayer,
-    removeOpponentPlayer,
-  } = useClubStore()
-  const [name, setName] = useState('')
+  const { isPro, opponentRosters, addOpponentPlayer, removeOpponentPlayer } = useClubStore()
+  const { clubs } = useReferenceDataStore()
   const [selected, setSelected] = useState<string | null>(null)
 
-  const handleAdd = () => {
-    const trimmed = name.trim()
-    if (!trimmed) return
-    addOpponentPreset(trimmed)
-    setName('')
-  }
-
-  const selectedPreset = opponentPresets.find((p) => p.id === selected) ?? null
+  const selectedClub = clubs.find((c) => c.id === selected) ?? null
 
   return (
     <div className="bg-s1 border border-bd rounded-2xl p-4 mb-3">
-      <div className="text-[14px] font-extrabold mb-3">🆚 الفرق المنافسة ({opponentPresets.length})</div>
+      <div className="text-[14px] font-extrabold mb-3">🆚 الفرق المنافسة ({clubs.length})</div>
 
-      <div className="grid grid-cols-3 gap-2 mb-3">
-        {opponentPresets.map((preset) => (
-          <button
-            key={preset.id}
-            onClick={() => setSelected(selected === preset.id ? null : preset.id)}
-            className={`flex flex-col items-center gap-1.5 border rounded-xl px-2 pt-3 pb-2 ${
-              selected === preset.id ? 'bg-pri/10 border-pri' : 'bg-bg border-bd'
-            }`}
-          >
-            <div className="w-14 h-14 rounded-full bg-s2 border border-bl overflow-hidden flex items-center justify-center text-pri font-black text-lg">
-              {preset.logo ? <img src={preset.logo} alt="" className="w-full h-full object-cover" /> : '🆚'}
-            </div>
-            <span className="text-[12px] font-bold text-center leading-tight line-clamp-2">{preset.name}</span>
-          </button>
-        ))}
-      </div>
+      {clubs.length === 0 ? (
+        <p className="text-[12px] text-t3">لا توجد أندية مسجَّلة بعد.</p>
+      ) : (
+        <div className="grid grid-cols-2 gap-2 mb-3">
+          {clubs.map((club) => (
+            <button
+              key={club.id}
+              onClick={() => setSelected(selected === club.id ? null : club.id)}
+              className={`flex items-center gap-2 border rounded-lg px-3 py-2.5 ${
+                selected === club.id ? 'bg-pri/10 border-pri' : 'bg-bg border-bd'
+              }`}
+            >
+              <div className="w-8 h-8 shrink-0 rounded-full bg-s2 border border-bl overflow-hidden flex items-center justify-center text-pri font-black text-[13px]">
+                {club.logo ? <img src={club.logo} alt="" className="w-full h-full object-cover" /> : '🆚'}
+              </div>
+              <span className="text-[12px] font-bold text-right leading-tight line-clamp-2">{club.name}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
-      {selectedPreset && (
-        <div className="bg-bg border border-bd rounded-xl p-3 mb-3">
+      {selectedClub && (
+        <div className="bg-bg border border-bd rounded-xl p-3">
           <div className="flex items-center gap-2 mb-2">
-            <LogoUpload
-              value={selectedPreset.logo}
-              onChange={(d) => setOpponentPresetLogo(selectedPreset.id, d)}
-              path={`opponents/${selectedPreset.id}`}
-              size={40}
-            />
-            <span className="flex-1 text-[13px] font-bold">{selectedPreset.name}</span>
-            <Link to={`/scouting/${selectedPreset.id}`} className="text-[11px] font-bold text-t2">
+            <span className="flex-1 text-[13px] font-bold">{selectedClub.name}</span>
+            <Link to={`/scouting/${selectedClub.id}`} className="text-[11px] font-bold text-t2">
               📋 استطلاع
             </Link>
-            <button
-              onClick={() => {
-                removeOpponentPreset(selectedPreset.id)
-                setSelected(null)
-              }}
-              className="w-7 h-7 rounded bg-err/10 text-err text-xs flex items-center justify-center"
-            >
-              ✕
-            </button>
           </div>
 
           {isPro ? (
             <OpponentRosterEditor
-              presetId={selectedPreset.id}
-              players={opponentRosters[selectedPreset.id] ?? []}
-              onAdd={(n, num) => addOpponentPlayer(selectedPreset.id, n, num)}
-              onRemove={(pid) => removeOpponentPlayer(selectedPreset.id, pid)}
+              players={opponentRosters[selectedClub.id] ?? []}
+              onAdd={(n, num) => addOpponentPlayer(selectedClub.id, n, num)}
+              onRemove={(pid) => removeOpponentPlayer(selectedClub.id, pid)}
             />
           ) : (
             <p className="text-[10px] text-t3 pt-2 border-t border-bd mt-2">
@@ -85,25 +57,11 @@ export function OpponentsSection() {
           )}
         </div>
       )}
-
-      <div className="flex gap-1.5 mt-2">
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-          placeholder="اسم فريق منافس..."
-          className="flex-1"
-        />
-        <button onClick={handleAdd} className="px-4 py-2.5 bg-pri text-white rounded-[10px] font-extrabold text-[13px]">
-          +
-        </button>
-      </div>
     </div>
   )
 }
 
 interface OpponentRosterEditorProps {
-  presetId: string
   players: { id: string; name: string; number?: number }[]
   onAdd: (name: string, number?: number) => void
   onRemove: (playerId: string) => void

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
-import type { ClubProfile, OpponentPreset, Player } from '../types/domain'
+import type { ClubProfile, CompetitionPreset, OpponentPreset, Player } from '../types/domain'
 import { supabaseStorage } from '../lib/supabaseStorage'
 
 const uid = () => Math.random().toString(36).slice(2, 11)
@@ -15,7 +15,6 @@ const initialState: ClubProfile = {
   colors: { pri: '#0ea5e9', sec: '#f97316' },
   isPro: false,
   players: [],
-  opponentPresets: [],
   opponentRosters: {},
 }
 
@@ -36,10 +35,7 @@ interface ClubActions {
   setPlayerPosition: (id: string, position: Player['position']) => void
   setPlayerBio: (id: string, bio: string) => void
 
-  addOpponentPreset: (name: string, logo?: string | null) => string
-  removeOpponentPreset: (id: string) => void
-  setOpponentPresetLogo: (id: string, logo: string | null) => void
-
+  /** presetId هنا معرّف نادٍ مرجعي عام (من reference_clubs) — روستر المنافس يبقى بيانات خاصة بحساب هذا النادي فقط */
   addOpponentPlayer: (presetId: string, name: string, number?: number) => void
   removeOpponentPlayer: (presetId: string, playerId: string) => void
 }
@@ -95,23 +91,6 @@ export const useClubStore = create<Store>()(
       setPlayerBio: (id, bio) =>
         set((st) => ({ players: st.players.map((p) => (p.id === id ? { ...p, bio } : p)) })),
 
-      addOpponentPreset: (name, logo = null) => {
-        const id = uid()
-        set((st) => ({ opponentPresets: [...st.opponentPresets, { id, name, logo }] }))
-        return id
-      },
-      removeOpponentPreset: (id) =>
-        set((st) => ({
-          opponentPresets: st.opponentPresets.filter((p) => p.id !== id),
-          opponentRosters: Object.fromEntries(
-            Object.entries(st.opponentRosters).filter(([pid]) => pid !== id),
-          ),
-        })),
-      setOpponentPresetLogo: (id, logo) =>
-        set((st) => ({
-          opponentPresets: st.opponentPresets.map((p) => (p.id === id ? { ...p, logo } : p)),
-        })),
-
       addOpponentPlayer: (presetId, name, number) =>
         set((st) => {
           const roster = st.opponentRosters[presetId] ?? []
@@ -136,4 +115,4 @@ export const useClubStore = create<Store>()(
   ),
 )
 
-export type { OpponentPreset }
+export type { OpponentPreset, CompetitionPreset }

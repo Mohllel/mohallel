@@ -107,3 +107,69 @@ export async function updateAppSettings(settings: AppSettings): Promise<void> {
     .eq('id', true)
   if (error) throw new Error(error.message)
 }
+
+export async function fetchAiPrompt(): Promise<string> {
+  if (!supabase) return ''
+  const { data, error } = await supabase.from('ai_config').select('enhance_prompt').eq('id', true).maybeSingle()
+  if (error || !data) return ''
+  return data.enhance_prompt as string
+}
+
+export async function setAiPrompt(prompt: string): Promise<void> {
+  if (!supabase) return
+  const { error } = await supabase.rpc('admin_set_ai_prompt', { new_prompt: prompt })
+  if (error) throw new Error(error.message)
+}
+
+export interface FeatureFlag {
+  key: string
+  enabled: boolean
+  description: string
+  updated_at: string
+}
+
+export async function fetchFeatureFlags(): Promise<FeatureFlag[]> {
+  if (!supabase) return []
+  const { data, error } = await supabase.from('feature_flags').select('*').order('key')
+  if (error || !data) return []
+  return data as FeatureFlag[]
+}
+
+export async function upsertFeatureFlag(key: string, enabled: boolean, description: string): Promise<void> {
+  if (!supabase) return
+  const { error } = await supabase.rpc('admin_upsert_feature_flag', {
+    flag_key: key,
+    flag_enabled: enabled,
+    flag_description: description,
+  })
+  if (error) throw new Error(error.message)
+}
+
+export async function deleteFeatureFlag(key: string): Promise<void> {
+  if (!supabase) return
+  const { error } = await supabase.rpc('admin_delete_feature_flag', { flag_key: key })
+  if (error) throw new Error(error.message)
+}
+
+export interface ClientErrorRow {
+  id: number
+  user_id: string | null
+  message: string
+  stack: string | null
+  url: string | null
+  created_at: string
+}
+
+export async function fetchClientErrors(limit = 100): Promise<ClientErrorRow[]> {
+  if (!supabase) return []
+  const { data, error } = await supabase.rpc('admin_list_client_errors', { limit_count: limit })
+  if (error) throw new Error(error.message)
+  return (data ?? []) as ClientErrorRow[]
+}
+
+/** ينقل بيانات النادي الحالية بحساب المطوّر (الملف، اللاعبون، المباريات، التدريب) لحساب آخر مسجَّل بالفعل — فصل نهائي بين الحسابين */
+export async function migrateClubDataTo(targetEmail: string): Promise<void> {
+  if (!supabase) return
+  const { error } = await supabase.rpc('admin_migrate_club_data', { target_email: targetEmail })
+  if (error) throw new Error(error.message)
+}

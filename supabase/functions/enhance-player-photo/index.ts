@@ -9,7 +9,27 @@ import { corsHeaders } from '../_shared/cors.ts'
 const GEMINI_MODEL = 'gemini-2.5-flash-image'
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`
 
-const PROMPT = `Create a photorealistic professional volleyball player portrait, photographed
+/** يجلب البرومت الحالي من جدول ai_config (قابل للتعديل من لوحة المطوّر) — يعود للنص الافتراضي إن تعذّر ذلك */
+async function fetchPrompt(): Promise<string> {
+  try {
+    const url = Deno.env.get('SUPABASE_URL')
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+    if (!url || !serviceKey) return DEFAULT_PROMPT
+
+    const res = await fetch(`${url}/rest/v1/ai_config?id=eq.true&select=enhance_prompt`, {
+      headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` },
+    })
+    if (!res.ok) return DEFAULT_PROMPT
+
+    const rows = await res.json()
+    const prompt = rows?.[0]?.enhance_prompt
+    return typeof prompt === 'string' && prompt.trim() ? prompt : DEFAULT_PROMPT
+  } catch {
+    return DEFAULT_PROMPT
+  }
+}
+
+const DEFAULT_PROMPT = `Create a photorealistic professional volleyball player portrait, photographed
 from his anatomical right at a 30-degree three-quarter angle. Natural relaxed
 stance, same friendly expression as in the reference. Do not mirror the image.
 
@@ -59,6 +79,8 @@ Deno.serve(async (req) => {
     const apiKey = Deno.env.get('GEMINI_API_KEY')
     if (!apiKey) return json({ error: 'GEMINI_API_KEY secret is not configured' }, 500)
 
+    const prompt = await fetchPrompt()
+
     const geminiRes = await fetch(`${GEMINI_URL}?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -68,7 +90,7 @@ Deno.serve(async (req) => {
             parts: [
               { inline_data: { mime_type: playerPhotoMime || 'image/jpeg', data: playerPhotoBase64 } },
               { inline_data: { mime_type: jerseyPhotoMime || 'image/jpeg', data: jerseyPhotoBase64 } },
-              { text: PROMPT },
+              { text: prompt },
             ],
           },
         ],

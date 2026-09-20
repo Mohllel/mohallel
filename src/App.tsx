@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
-import { Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router-dom'
 import { useClubStore } from './store/useClubStore'
+import { useAuthStore } from './store/useAuthStore'
 import { AuthGate } from './components/auth/AuthGate'
 import { TabLayout } from './components/layout/TabLayout'
 import { HomeScreen } from './components/home/HomeScreen'
@@ -32,11 +33,22 @@ function App() {
 
 function AuthenticatedApp() {
   const colors = useClubStore((s) => s.colors)
+  const { isAdmin } = useAuthStore()
 
   useEffect(() => {
     document.documentElement.style.setProperty('--color-pri', colors.pri)
     document.documentElement.style.setProperty('--color-sec', colors.sec)
   }, [colors])
+
+  /** حساب المطوّر منفصل تماماً — لا يصل أبداً لواجهة النادي/المشترك، بلا استثناء */
+  if (isAdmin) {
+    return (
+      <Routes>
+        <Route path="/admin" element={<AdminScreen />} />
+        <Route path="*" element={<Navigate to="/admin" replace />} />
+      </Routes>
+    )
+  }
 
   return (
     <Routes>
@@ -56,7 +68,6 @@ function AuthenticatedApp() {
       <Route path="/scouting/:presetId" element={<ScoutingReportScreen />} />
       <Route path="/training/new" element={<NewTrainingScreen />} />
       <Route path="/training/:id" element={<TrainingSessionScreen />} />
-      <Route path="/admin" element={<AdminScreen />} />
     </Routes>
   )
 }
