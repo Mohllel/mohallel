@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { useClubStore } from '../../store/useClubStore'
 import { useMatchesStore } from '../../store/useMatchesStore'
+import { COURT_POSITIONS } from '../../constants/courtPositions'
 import { Logo } from '../brand/Logo'
 import { Avatar } from '../shared/Avatar'
 
@@ -11,18 +12,28 @@ export function StartScheduledMatchScreen() {
   const { players } = useClubStore()
   const match = useMatchesStore((s) => (id ? s.matches[id] : undefined))
   const startScheduledMatch = useMatchesStore((s) => s.startScheduledMatch)
+  const assignRotation = useMatchesStore((s) => s.assignRotation)
 
   const [selectedPlayers, setSelectedPlayers] = useState<Set<string>>(new Set(players.map((p) => p.id)))
 
   if (!id || !match || match.status !== 'scheduled') return <Navigate to="/results" replace />
 
+  const lineup = match.rotation.A[1] ?? []
+  const todaysPlayers = players.filter((p) => selectedPlayers.has(p.id))
+
   const togglePlayer = (pid: string) => {
+    const wasSelected = selectedPlayers.has(pid)
     setSelectedPlayers((prev) => {
       const next = new Set(prev)
-      if (next.has(pid)) next.delete(pid)
+      if (wasSelected) next.delete(pid)
       else next.add(pid)
       return next
     })
+    if (wasSelected) {
+      // إزالة لاعب من اليوم يفرغ مكانه من التشكيلة تلقائياً لتفادي تعيين لاعب غير مشارك
+      const slot = lineup.find((s) => s.playerId === pid)
+      if (slot) assignRotation(id, 'A', 1, slot.position, null)
+    }
   }
 
   const handleStart = () => {
@@ -69,6 +80,37 @@ export function StartScheduledMatchScreen() {
           </div>
         )}
       </div>
+
+      {todaysPlayers.length > 0 && (
+        <div className="bg-s1 border border-bd rounded-2xl p-4 mb-3">
+          <div className="text-[14px] font-extrabold mb-3">🔄 التشكيلة الأساسية (اختياري)</div>
+          {COURT_POSITIONS.slice()
+            .sort((a, b) => a.position - b.position)
+            .map((cp) => {
+              const slot = lineup.find((s) => s.position === cp.position)
+              return (
+                <div key={cp.position} className="flex items-center gap-2 mb-2 last:mb-0">
+                  <span className="w-20 text-[11px] text-t3 font-bold shrink-0">
+                    {cp.position} · {cp.label}
+                  </span>
+                  <select
+                    value={slot?.playerId ?? ''}
+                    onChange={(e) => assignRotation(id, 'A', 1, cp.position, e.target.value || null)}
+                    className="flex-1"
+                  >
+                    <option value="">— فارغ —</option>
+                    {todaysPlayers.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                        {p.number != null ? ` (#${p.number})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )
+            })}
+        </div>
+      )}
 
       <button
         onClick={handleStart}

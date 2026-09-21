@@ -75,16 +75,6 @@ function revertPointEffects(
 }
 
 interface MatchesActions {
-  createMatch: (
-    opponentName: string,
-    opponentLogo: string | null,
-    opponentPresetId: string | null,
-    date: string,
-    playerIds: string[],
-    competitionId?: string | null,
-    round?: string | null,
-    venue?: string | null,
-  ) => string
   /** يحجز مباراة بتاريخ مستقبلي بلا لاعبين بعد — تظهر كـ"المباراة القادمة" بالصفحة الرئيسية */
   createScheduledMatch: (
     opponentName: string,
@@ -149,42 +139,6 @@ export const useMatchesStore = create<Store>()(
       _undoIds: {},
       _undoEventIds: {},
 
-      createMatch: (
-        opponentName,
-        opponentLogo,
-        opponentPresetId,
-        date,
-        playerIds,
-        competitionId = null,
-        round = null,
-        venue = null,
-      ) => {
-        const id = uid()
-        const match: Match = {
-          id,
-          createdAt: Date.now(),
-          date,
-          opponentName,
-          opponentLogo,
-          opponentPresetId,
-          competitionId,
-          round,
-          venue,
-          playerIds,
-          mode: 'grid',
-          set: 1,
-          sA: [0, 0, 0, 0, 0],
-          sB: [0, 0, 0, 0, 0],
-          setWinners: [null, null, null, null, null],
-          status: 'live',
-          act: [],
-          events: [],
-          rotation: { A: { 1: emptyRotation() }, B: { 1: emptyRotation() } },
-          servingSide: {},
-        }
-        set((st) => ({ matches: { ...st.matches, [id]: match } }))
-        return id
-      },
       createScheduledMatch: (
         opponentName,
         opponentLogo,
