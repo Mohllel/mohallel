@@ -33,9 +33,10 @@ export function CourtMap({ matchId }: CourtMapProps) {
     setServingSide,
     getServingSide,
   } = useMatchesStore()
-  const { clubName, isPro, opponentRosters } = useClubStore()
+  const { clubName, isPro, opponentRosters, addOpponentPlayer } = useClubStore()
 
   const [rotationOpen, setRotationOpen] = useState<TeamSide | null>(null)
+  const [addOpponentAt, setAddOpponentAt] = useState<RotationPosition | null>(null)
   const [pointPopup, setPointPopup] = useState(false)
   const [timeoutPopup, setTimeoutPopup] = useState(false)
   const [challengeStep, setChallengeStep] = useState<ChallengeStep>(null)
@@ -71,7 +72,8 @@ export function CourtMap({ matchId }: CourtMapProps) {
   const set = match.set
 
   const opponentRoster = match.opponentPresetId ? opponentRosters[match.opponentPresetId] ?? [] : []
-  const opponentTrackingEnabled = isPro && opponentRoster.length > 0
+  /** يكفي تفعيل Pro لعرض ملعب المنافس — لاعبوه يُضافون يدوياً من الملعب نفسه، بلا حاجة لروستر جاهز مسبقاً */
+  const opponentTrackingEnabled = isPro
 
   const playersBySide = (side: TeamSide): Player[] => (side === 'A' ? ownPlayers : opponentRoster)
   const rotation = (side: TeamSide) => getRotation(matchId, side, set)
@@ -95,6 +97,13 @@ export function CourtMap({ matchId }: CourtMapProps) {
 
   const handleBenchSelect = (side: TeamSide, playerId: string) => {
     setBenchSelection((prev) => (prev && prev.side === side && prev.playerId === playerId ? null : { side, playerId }))
+  }
+
+  const handleAddOpponentPlayer = (name: string, number?: number) => {
+    if (addOpponentAt === null || !match.opponentPresetId) return
+    const newId = addOpponentPlayer(match.opponentPresetId, name, number)
+    assignRotation(matchId, 'B', set, addOpponentAt, newId)
+    setAddOpponentAt(null)
   }
 
   const renderHalf = (side: TeamSide) => {
@@ -127,15 +136,13 @@ export function CourtMap({ matchId }: CourtMapProps) {
                 variant={side === 'A' ? 'own' : 'opponent'}
                 highlighted={!!(benchSelection && benchSelection.side === side && player != null)}
                 onClick={() => handleCircleClick(side, cp.position)}
-                onEmptyClick={() => setRotationOpen(side)}
+                onEmptyClick={() => (side === 'A' ? setRotationOpen(side) : setAddOpponentAt(cp.position))}
               />
             )
           })
         ) : (
           <div className="absolute inset-0 flex items-center justify-center px-2 pointer-events-none z-10">
-            <span className="text-[11px] text-t3 text-center leading-relaxed">
-              {isPro ? 'أضف روستر هذا المنافس من الإعدادات لعرض لاعبيه' : '🔒 عرض لاعبي المنافس ميزة Pro'}
-            </span>
+            <span className="text-[11px] text-t3 text-center leading-relaxed">🔒 عرض لاعبي المنافس ميزة Pro</span>
           </div>
         )}
       </div>
@@ -145,7 +152,7 @@ export function CourtMap({ matchId }: CourtMapProps) {
   const servingSide = getServingSide(matchId, set)
 
   return (
-    <div className="p-3">
+    <div className="p-3 max-w-[640px] mx-auto">
       <div className="flex gap-2 items-start">
         <EventLogPanel events={match.events} ownName={ownName} opponentName={opponentName} findPlayer={findPlayer} />
 
@@ -253,6 +260,14 @@ export function CourtMap({ matchId }: CourtMapProps) {
         />
       )}
 
+      {addOpponentAt !== null && (
+        <AddOpponentPlayerPopup
+          position={addOpponentAt}
+          onAdd={handleAddOpponentPlayer}
+          onClose={() => setAddOpponentAt(null)}
+        />
+      )}
+
       {pointPopup && (
         <SidePickerPopup
           title="نقطة سريعة (بلا مكان محدد)"
@@ -349,6 +364,54 @@ export function CourtMap({ matchId }: CourtMapProps) {
       )}
 
       <EventUndoBar matchId={matchId} ownName={ownName} opponentName={opponentName} />
+    </div>
+  )
+}
+
+interface AddOpponentPlayerPopupProps {
+  position: RotationPosition
+  onAdd: (name: string, number?: number) => void
+  onClose: () => void
+}
+
+function AddOpponentPlayerPopup({ position, onAdd, onClose }: AddOpponentPlayerPopupProps) {
+  const [name, setName] = useState('')
+  const [number, setNumber] = useState('')
+
+  const handleAdd = () => {
+    const trimmed = name.trim()
+    if (!trimmed) return
+    onAdd(trimmed, number === '' ? undefined : Number(number))
+  }
+
+  return (
+    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/60" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="bg-s1 border border-bd rounded-2xl p-4 w-72">
+        <div className="text-[13px] font-extrabold text-center mb-3">إضافة لاعب منافس — الموقع {position}</div>
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+          placeholder="اسم اللاعب"
+          autoFocus
+          className="mb-2"
+        />
+        <input
+          value={number}
+          onChange={(e) => setNumber(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+          type="number"
+          placeholder="الرقم (اختياري)"
+          className="mb-3"
+        />
+        <button
+          onClick={handleAdd}
+          disabled={!name.trim()}
+          className="w-full py-3 bg-pri text-white rounded-xl font-extrabold text-[13px] disabled:opacity-40"
+        >
+          إضافة
+        </button>
+      </div>
     </div>
   )
 }

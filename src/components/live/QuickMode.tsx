@@ -5,6 +5,7 @@ import { useMatchesStore } from '../../store/useMatchesStore'
 import { useMatchPlayers } from '../../lib/useMatchPlayers'
 import { cellCount, playerTotalInSet, skillTotal } from '../../lib/stats'
 import type { SkillKey } from '../../types/domain'
+import { SkillLegend } from './SkillLegend'
 
 interface QuickModeProps {
   matchId: string
@@ -44,7 +45,8 @@ export function QuickMode({ matchId, onRequestQuality }: QuickModeProps) {
       <div className="text-center text-[11px] text-t3 bg-s1 mx-2 mb-1 rounded-[10px] border border-bd py-1.5">
         النقر يسجّل <strong className="text-ok">جيد (+)</strong> مباشرة — اضغط مطوّلاً لتغيير التقييم
       </div>
-      <div className="p-2 overflow-x-auto">
+      <SkillLegend />
+      <div className="p-2 pt-0 overflow-x-auto">
         <table className="w-full border-separate [border-spacing:3px]">
           <thead>
             <tr>

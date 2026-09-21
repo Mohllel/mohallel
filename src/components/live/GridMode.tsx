@@ -3,6 +3,7 @@ import { useMatchesStore } from '../../store/useMatchesStore'
 import { useMatchPlayers } from '../../lib/useMatchPlayers'
 import { cellCount, playerTotalInSet, skillTotal } from '../../lib/stats'
 import type { SkillKey } from '../../types/domain'
+import { SkillLegend } from './SkillLegend'
 
 interface GridModeProps {
   matchId: string
@@ -16,7 +17,9 @@ export function GridMode({ matchId, onRequestQuality }: GridModeProps) {
   const { act, set } = match
 
   return (
-    <div className="p-2 overflow-x-auto">
+    <div className="p-2">
+      <SkillLegend />
+      <div className="overflow-x-auto">
       <table className="w-full border-separate [border-spacing:3px]">
         <thead>
           <tr>
@@ -70,6 +73,7 @@ export function GridMode({ matchId, onRequestQuality }: GridModeProps) {
           </tr>
         </tfoot>
       </table>
+      </div>
     </div>
   )
 }
