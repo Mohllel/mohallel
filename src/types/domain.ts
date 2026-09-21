@@ -67,13 +67,19 @@ export interface MatchEvent {
 export type LiveMode = 'grid' | 'quick' | 'court'
 export type ReportView = 'overview' | 'player' | 'video'
 export type MatchStatus = 'scheduled' | 'live' | 'finished'
+export type TrainingStatus = 'scheduled' | 'done'
 
 export interface TrainingSession {
   id: string
   createdAt: number
   date: string
   title: string
+  /** اللاعبون المدعوّون للتمرين */
   playerIds: string[]
+  /** غير معرَّفة = بيانات قديمة قبل ميزة الحضور، تُعامَل معاملة "منتهٍ" */
+  status?: TrainingStatus
+  /** من حضر فعلياً من المدعوّين — تُملأ عند بدء تمرين مجدول؛ للتمرين الفوري تُساوي playerIds */
+  attendedPlayerIds?: string[]
   /** تكرارات المهارات المسجَّلة بالتمرين — بنفس بنية إجراء المباراة لإعادة استخدام دوال التحليل */
   reps: Action[]
 }

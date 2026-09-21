@@ -18,6 +18,10 @@ interface TrainingState {
 
 interface TrainingActions {
   createSession: (title: string, date: string, playerIds: string[]) => string
+  /** يجدول تمريناً بتاريخ مقبل بلا حضور مسجَّل بعد — يظهر بالتمارين المجدولة */
+  createScheduledSession: (title: string, date: string, playerIds: string[]) => string
+  /** يحوّل تمريناً مجدولاً إلى "منتهٍ" بعد تسجيل من حضر فعلياً من المدعوّين */
+  startScheduledSession: (id: string, attendedPlayerIds: string[]) => void
   deleteSession: (id: string) => void
   addRep: (sessionId: string, input: AddRepInput) => void
   undoLastRep: (sessionId: string) => void
@@ -36,10 +40,40 @@ export const useTrainingStore = create<Store>()(
 
       createSession: (title, date, playerIds) => {
         const id = uid()
-        const session: TrainingSession = { id, createdAt: Date.now(), date, title, playerIds, reps: [] }
+        const session: TrainingSession = {
+          id,
+          createdAt: Date.now(),
+          date,
+          title,
+          playerIds,
+          status: 'done',
+          attendedPlayerIds: playerIds,
+          reps: [],
+        }
         set((st) => ({ sessions: { ...st.sessions, [id]: session } }))
         return id
       },
+      createScheduledSession: (title, date, playerIds) => {
+        const id = uid()
+        const session: TrainingSession = {
+          id,
+          createdAt: Date.now(),
+          date,
+          title,
+          playerIds,
+          status: 'scheduled',
+          attendedPlayerIds: [],
+          reps: [],
+        }
+        set((st) => ({ sessions: { ...st.sessions, [id]: session } }))
+        return id
+      },
+      startScheduledSession: (id, attendedPlayerIds) =>
+        set((st) => {
+          const session = st.sessions[id]
+          if (!session || session.status !== 'scheduled') return st
+          return { sessions: { ...st.sessions, [id]: { ...session, status: 'done', attendedPlayerIds } } }
+        }),
       deleteSession: (id) =>
         set((st) => {
           const next = { ...st.sessions }

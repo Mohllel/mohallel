@@ -35,7 +35,8 @@ export function TrainingSessionScreen() {
     )
   }
 
-  const participants = players.filter((p) => session.playerIds.includes(p.id))
+  const attendedIds = session.attendedPlayerIds ?? session.playerIds
+  const participants = players.filter((p) => attendedIds.includes(p.id))
   const undoId = lastRepId(id)
   const lastRep = undoId ? session.reps.find((r) => r.id === undoId) : null
 
