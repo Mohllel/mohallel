@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useClubStore } from '../../store/useClubStore'
 import { useMatchesStore } from '../../store/useMatchesStore'
 import { Logo } from '../brand/Logo'
+import { BackButton } from '../shared/BackButton'
 import { IconButton } from '../shared/IconButton'
 import { LiveShareButton } from './LiveShareButton'
 import { ScoreBar } from './ScoreBar'
@@ -21,6 +22,7 @@ export function Header({ matchId }: HeaderProps) {
     <div className="sticky top-0 z-50 bg-bg/97 backdrop-blur-md px-3 py-2 border-b border-bd">
       <div className="flex items-center justify-between mb-1.5">
         <div className="flex items-center gap-1.5">
+          <BackButton />
           <Logo size={28} />
           <div className="text-[15px] font-black">
             <span className="text-pri">مُحلّل</span>

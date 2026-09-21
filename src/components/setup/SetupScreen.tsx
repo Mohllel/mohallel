@@ -4,6 +4,7 @@ import { useClubStore } from '../../store/useClubStore'
 import { useReferenceDataStore } from '../../store/useReferenceDataStore'
 import { useMatchesStore } from '../../store/useMatchesStore'
 import { Logo } from '../brand/Logo'
+import { BackButton } from '../shared/BackButton'
 import type { Match } from '../../types/domain'
 import type { CompetitionPreset } from '../../store/useClubStore'
 
@@ -50,7 +51,11 @@ export function SetupScreen() {
 
   return (
     <div className="p-4 animate-[fadeIn_.3s_ease]">
-      <div className="text-center pt-6 pb-5">
+      <div className="pt-3">
+        <BackButton />
+      </div>
+
+      <div className="text-center pb-5">
         <div className="mx-auto mb-2 w-14 h-14">
           <Logo size={56} />
         </div>

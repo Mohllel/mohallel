@@ -5,6 +5,7 @@ import { useMatchesStore } from '../../store/useMatchesStore'
 import { COURT_POSITIONS } from '../../constants/courtPositions'
 import { Logo } from '../brand/Logo'
 import { Avatar } from '../shared/Avatar'
+import { BackButton } from '../shared/BackButton'
 
 export function StartScheduledMatchScreen() {
   const { id } = useParams<{ id: string }>()
@@ -43,7 +44,11 @@ export function StartScheduledMatchScreen() {
 
   return (
     <div className="p-4 animate-[fadeIn_.3s_ease]">
-      <div className="text-center pt-6 pb-5">
+      <div className="pt-3">
+        <BackButton to="/match/new" />
+      </div>
+
+      <div className="text-center pb-5">
         <div className="mx-auto mb-2 w-14 h-14">
           <Logo size={56} />
         </div>

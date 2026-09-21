@@ -4,6 +4,7 @@ import { useReferenceDataStore } from '../../store/useReferenceDataStore'
 import { useMatchesStore } from '../../store/useMatchesStore'
 import { buildScoutingReport } from '../../lib/scouting'
 import { ZoneHeatmap } from '../analytics/ZoneHeatmap'
+import { BackButton } from '../shared/BackButton'
 
 export function ScoutingReportScreen() {
   const { presetId } = useParams<{ presetId: string }>()
@@ -31,12 +32,7 @@ export function ScoutingReportScreen() {
   return (
     <div className="p-4 animate-[fadeIn_.3s_ease]">
       <div className="flex items-center gap-2 mb-4">
-        <button
-          onClick={() => navigate(-1)}
-          className="w-[34px] h-[34px] rounded-[10px] bg-s2 border border-bd text-t2 flex items-center justify-center"
-        >
-          ←
-        </button>
+        <BackButton />
         <h2 className="text-[18px] font-black flex-1">📋 استطلاع {preset.name}</h2>
       </div>
 

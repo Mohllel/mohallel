@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useClubStore } from '../../store/useClubStore'
 import { useTrainingStore } from '../../store/useTrainingStore'
 import { Avatar } from '../shared/Avatar'
+import { BackButton } from '../shared/BackButton'
 
 export function NewTrainingScreen() {
   const navigate = useNavigate()
@@ -33,12 +34,7 @@ export function NewTrainingScreen() {
   return (
     <div className="p-4 animate-[fadeIn_.3s_ease]">
       <div className="flex items-center gap-2 mb-4">
-        <button
-          onClick={() => navigate(-1)}
-          className="w-[34px] h-[34px] rounded-[10px] bg-s2 border border-bd text-t2 flex items-center justify-center"
-        >
-          ←
-        </button>
+        <BackButton />
         <h2 className="text-[18px] font-black flex-1">🏋️ تمرين جديد</h2>
       </div>
 
