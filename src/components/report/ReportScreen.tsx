@@ -6,6 +6,7 @@ import { useMatchPlayers } from '../../lib/useMatchPlayers'
 import { countSetWins } from '../../lib/scoring'
 import { buildAndDownloadReportPdf, downloadElementAsPng } from '../../lib/export/pdf'
 import type { ReportView } from '../../types/domain'
+import { BackButton } from '../shared/BackButton'
 import { Infographic } from './Infographic'
 import { OverviewTab } from './OverviewTab'
 import { PdfExportLayer } from './pdf/PdfExportLayer'
@@ -72,12 +73,7 @@ export function ReportScreen() {
   return (
     <div className="p-3 animate-[fadeIn_.3s_ease]">
       <div className="flex items-center gap-2 mb-3">
-        <button
-          onClick={() => navigate(-1)}
-          className="w-[34px] h-[34px] rounded-[10px] bg-s2 border border-bd text-t2 flex items-center justify-center"
-        >
-          ←
-        </button>
+        <BackButton />
         <h2 className="text-[18px] font-black flex-1">التقرير</h2>
         <button
           onClick={handleDownloadPdf}

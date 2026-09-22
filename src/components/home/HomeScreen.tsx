@@ -13,7 +13,7 @@ const ACTIONS = [
 ]
 
 export function HomeScreen() {
-  const { clubName, clubLogo, userName, headerImage } = useClubStore()
+  const { clubName, headerImage } = useClubStore()
   const matches = useMatchesStore((s) => s.matches)
   const nextMatch = getNextMatch(matches)
 
@@ -38,20 +38,6 @@ export function HomeScreen() {
           منصة تحليل مباريات كرة الطائرة — سجّل، حلّل، وارتقِ بأداء فريقك
         </p>
       </div>
-
-      <Link
-        to="/settings"
-        className="flex items-center gap-3 bg-s1 border border-bd rounded-2xl p-3 mb-4"
-      >
-        <div className="w-12 h-12 rounded-xl bg-s2 border border-bl overflow-hidden flex items-center justify-center text-pri font-black shrink-0">
-          {clubLogo ? <img src={clubLogo} alt="" className="w-full h-full object-cover" /> : '🏐'}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="text-[15px] font-extrabold truncate">{clubName || 'أضف اسم ناديك'}</div>
-          <div className="text-[11px] text-t3">{userName ? `مرحباً، ${userName}` : 'اضغط لإعداد ملف النادي'}</div>
-        </div>
-        <span className="text-t3 text-xs">✎ تعديل</span>
-      </Link>
 
       {nextMatch && (
         <Link

@@ -5,10 +5,10 @@ import { useTrainingStore } from '../../store/useTrainingStore'
 import { Avatar } from '../shared/Avatar'
 import { BackButton } from '../shared/BackButton'
 
-export function NewTrainingScreen() {
+export function ScheduleTrainingScreen() {
   const navigate = useNavigate()
   const { players } = useClubStore()
-  const { createSession } = useTrainingStore()
+  const { createScheduledSession } = useTrainingStore()
 
   const [title, setTitle] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
@@ -23,19 +23,19 @@ export function NewTrainingScreen() {
     })
   }
 
-  const canStart = title.trim().length > 0 && selected.size >= 1
+  const canSchedule = title.trim().length > 0 && selected.size >= 1
 
-  const handleStart = () => {
-    if (!canStart) return
-    const id = createSession(title.trim(), date, Array.from(selected))
-    navigate(`/training/${id}`)
+  const handleSchedule = () => {
+    if (!canSchedule) return
+    createScheduledSession(title.trim(), date, Array.from(selected))
+    navigate('/training')
   }
 
   return (
     <div className="p-4 animate-[fadeIn_.3s_ease]">
       <div className="flex items-center gap-2 mb-4">
-        <BackButton />
-        <h2 className="text-[18px] font-black flex-1">🏋️ تمرين جديد</h2>
+        <BackButton to="/training" />
+        <h2 className="text-[18px] font-black flex-1">🗓 جدولة تمرين</h2>
       </div>
 
       <div className="bg-s1 border border-bd rounded-2xl p-4 mb-3">
@@ -47,7 +47,7 @@ export function NewTrainingScreen() {
 
       <div className="bg-s1 border border-bd rounded-2xl p-4 mb-3">
         <div className="text-[14px] font-extrabold mb-3">
-          👥 المشاركون ({selected.size}/{players.length})
+          👥 المدعوّون ({selected.size}/{players.length})
         </div>
         {players.map((p) => (
           <label
@@ -62,11 +62,11 @@ export function NewTrainingScreen() {
       </div>
 
       <button
-        onClick={handleStart}
-        disabled={!canStart}
+        onClick={handleSchedule}
+        disabled={!canSchedule}
         className="block w-full py-4 bg-gradient-to-br from-ok to-[#059669] text-white rounded-2xl text-[17px] font-black mt-2 disabled:opacity-40"
       >
-        ▶ بدء التمرين
+        🗓 جدولة التمرين
       </button>
     </div>
   )

@@ -7,6 +7,7 @@ import { qualityByValue } from '../../constants/quality'
 import { cellCount, playerStats } from '../../lib/stats'
 import type { Quality, SkillKey } from '../../types/domain'
 import { QualityPopup } from '../live/QualityPopup'
+import { BackButton } from '../shared/BackButton'
 
 interface PendingQuality {
   rect: DOMRect
@@ -34,7 +35,8 @@ export function TrainingSessionScreen() {
     )
   }
 
-  const participants = players.filter((p) => session.playerIds.includes(p.id))
+  const attendedIds = session.attendedPlayerIds ?? session.playerIds
+  const participants = players.filter((p) => attendedIds.includes(p.id))
   const undoId = lastRepId(id)
   const lastRep = undoId ? session.reps.find((r) => r.id === undoId) : null
 
@@ -47,12 +49,7 @@ export function TrainingSessionScreen() {
   return (
     <div className="p-3 animate-[fadeIn_.3s_ease]">
       <div className="flex items-center gap-2 mb-3">
-        <button
-          onClick={() => navigate('/training')}
-          className="w-[34px] h-[34px] rounded-[10px] bg-s2 border border-bd text-t2 flex items-center justify-center"
-        >
-          ←
-        </button>
+        <BackButton to="/training" />
         <div className="flex-1">
           <h2 className="text-[16px] font-black">{session.title}</h2>
           <p className="text-[10px] text-t3">{session.date}</p>

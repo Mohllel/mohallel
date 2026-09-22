@@ -36,7 +36,7 @@ interface ClubActions {
   setPlayerBio: (id: string, bio: string) => void
 
   /** presetId هنا معرّف نادٍ مرجعي عام (من reference_clubs) — روستر المنافس يبقى بيانات خاصة بحساب هذا النادي فقط */
-  addOpponentPlayer: (presetId: string, name: string, number?: number) => void
+  addOpponentPlayer: (presetId: string, name: string, number?: number) => string
   removeOpponentPlayer: (presetId: string, playerId: string) => void
 }
 
@@ -91,12 +91,15 @@ export const useClubStore = create<Store>()(
       setPlayerBio: (id, bio) =>
         set((st) => ({ players: st.players.map((p) => (p.id === id ? { ...p, bio } : p)) })),
 
-      addOpponentPlayer: (presetId, name, number) =>
+      addOpponentPlayer: (presetId, name, number) => {
+        const id = uid()
         set((st) => {
           const roster = st.opponentRosters[presetId] ?? []
-          const player: Player = { id: uid(), name, number, photo: null, teamSide: 'B' }
+          const player: Player = { id, name, number, photo: null, teamSide: 'B' }
           return { opponentRosters: { ...st.opponentRosters, [presetId]: [...roster, player] } }
-        }),
+        })
+        return id
+      },
       removeOpponentPlayer: (presetId, playerId) =>
         set((st) => {
           const roster = st.opponentRosters[presetId] ?? []

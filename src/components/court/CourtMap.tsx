@@ -6,7 +6,7 @@ import { useMatchPlayers } from '../../lib/useMatchPlayers'
 import type { Player, RotationPosition, TeamSide } from '../../types/domain'
 import { BenchStrip } from './BenchStrip'
 import { CourtZoneOverlay } from './CourtZoneOverlay'
-import { EventLogSheet } from './EventLogSheet'
+import { EventLogPanel } from './EventLogPanel'
 import { EventUndoBar } from './EventUndoBar'
 import { PlayerCircle } from './PlayerCircle'
 import { RotationEditor } from './RotationEditor'
@@ -33,13 +33,13 @@ export function CourtMap({ matchId }: CourtMapProps) {
     setServingSide,
     getServingSide,
   } = useMatchesStore()
-  const { clubName, isPro, opponentRosters } = useClubStore()
+  const { clubName, isPro, opponentRosters, addOpponentPlayer } = useClubStore()
 
   const [rotationOpen, setRotationOpen] = useState<TeamSide | null>(null)
+  const [addOpponentAt, setAddOpponentAt] = useState<RotationPosition | null>(null)
   const [pointPopup, setPointPopup] = useState(false)
   const [timeoutPopup, setTimeoutPopup] = useState(false)
   const [challengeStep, setChallengeStep] = useState<ChallengeStep>(null)
-  const [eventLogOpen, setEventLogOpen] = useState(false)
   const [serverPopup, setServerPopup] = useState(false)
   const [subModalSide, setSubModalSide] = useState<TeamSide | null>(null)
   const [benchSelection, setBenchSelection] = useState<{ side: TeamSide; playerId: string } | null>(null)
@@ -72,7 +72,8 @@ export function CourtMap({ matchId }: CourtMapProps) {
   const set = match.set
 
   const opponentRoster = match.opponentPresetId ? opponentRosters[match.opponentPresetId] ?? [] : []
-  const opponentTrackingEnabled = isPro && opponentRoster.length > 0
+  /** يكفي تفعيل Pro لعرض ملعب المنافس — لاعبوه يُضافون يدوياً من الملعب نفسه، بلا حاجة لروستر جاهز مسبقاً */
+  const opponentTrackingEnabled = isPro
 
   const playersBySide = (side: TeamSide): Player[] => (side === 'A' ? ownPlayers : opponentRoster)
   const rotation = (side: TeamSide) => getRotation(matchId, side, set)
@@ -96,6 +97,13 @@ export function CourtMap({ matchId }: CourtMapProps) {
 
   const handleBenchSelect = (side: TeamSide, playerId: string) => {
     setBenchSelection((prev) => (prev && prev.side === side && prev.playerId === playerId ? null : { side, playerId }))
+  }
+
+  const handleAddOpponentPlayer = (name: string, number?: number) => {
+    if (addOpponentAt === null || !match.opponentPresetId) return
+    const newId = addOpponentPlayer(match.opponentPresetId, name, number)
+    assignRotation(matchId, 'B', set, addOpponentAt, newId)
+    setAddOpponentAt(null)
   }
 
   const renderHalf = (side: TeamSide) => {
@@ -128,15 +136,13 @@ export function CourtMap({ matchId }: CourtMapProps) {
                 variant={side === 'A' ? 'own' : 'opponent'}
                 highlighted={!!(benchSelection && benchSelection.side === side && player != null)}
                 onClick={() => handleCircleClick(side, cp.position)}
-                onEmptyClick={() => setRotationOpen(side)}
+                onEmptyClick={() => (side === 'A' ? setRotationOpen(side) : setAddOpponentAt(cp.position))}
               />
             )
           })
         ) : (
           <div className="absolute inset-0 flex items-center justify-center px-2 pointer-events-none z-10">
-            <span className="text-[11px] text-t3 text-center leading-relaxed">
-              {isPro ? 'أضف روستر هذا المنافس من الإعدادات لعرض لاعبيه' : '🔒 عرض لاعبي المنافس ميزة Pro'}
-            </span>
+            <span className="text-[11px] text-t3 text-center leading-relaxed">🔒 عرض لاعبي المنافس ميزة Pro</span>
           </div>
         )}
       </div>
@@ -146,102 +152,102 @@ export function CourtMap({ matchId }: CourtMapProps) {
   const servingSide = getServingSide(matchId, set)
 
   return (
-    <div className="p-3">
-      <div className="flex items-center justify-between mb-1 gap-2">
-        <span className="text-[12px] font-extrabold text-t2 flex-1 truncate">
-          {ownName} {servingSide === 'A' && <span className="text-[10px]">🏐</span>}
-        </span>
-        <button
-          onClick={() => setPointPopup(true)}
-          className="px-4 py-1.5 bg-err text-white rounded-lg text-[12px] font-extrabold shadow-[0_2px_10px_rgba(239,68,68,0.35)]"
-        >
-          ⚡ نقطة
-        </button>
-        <span className="text-[12px] font-extrabold text-t2 flex-1 truncate text-left">
-          {servingSide === 'B' && <span className="text-[10px]">🏐</span>} {opponentName}
-        </span>
-      </div>
+    <div className="p-3 max-w-[640px] mx-auto">
+      <div className="flex gap-2 items-start">
+        <EventLogPanel events={match.events} ownName={ownName} opponentName={opponentName} findPlayer={findPlayer} />
 
-      <div className="flex justify-center mb-2">
-        <button onClick={() => setServerPopup(true)} className="text-[10px] font-bold text-t3 underline">
-          {servingSide ? `🏐 يُرسل: ${servingSide === 'A' ? ownName : opponentName} (تصحيح)` : '🏐 حدّد من يبدأ بالإرسال'}
-        </button>
-      </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between mb-1 gap-2">
+            <span className="text-[12px] font-extrabold text-t2 flex-1 truncate">
+              {ownName} {servingSide === 'A' && <span className="text-[10px]">🏐</span>}
+            </span>
+            <button
+              onClick={() => setPointPopup(true)}
+              className="px-4 py-1.5 bg-err text-white rounded-lg text-[12px] font-extrabold shadow-[0_2px_10px_rgba(239,68,68,0.35)]"
+            >
+              ⚡ نقطة
+            </button>
+            <span className="text-[12px] font-extrabold text-t2 flex-1 truncate text-left">
+              {servingSide === 'B' && <span className="text-[10px]">🏐</span>} {opponentName}
+            </span>
+          </div>
 
-      <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
-        <button
-          onClick={() => setRotationOpen('A')}
-          className="px-2.5 py-1.5 bg-s1 border border-bd rounded-lg text-[10px] font-bold text-pri"
-        >
-          🔄 التشكيلة
-        </button>
-        <div className="flex gap-1.5 flex-wrap justify-center">
-          <button
-            onClick={() => setSubModalSide('A')}
-            className="px-2.5 py-1.5 bg-s1 border border-bd rounded-lg text-[10px] font-bold text-ok"
-          >
-            🔁 تبديل
-          </button>
-          <button
-            onClick={() => setTimeoutPopup(true)}
-            className="px-2.5 py-1.5 bg-s1 border border-bd rounded-lg text-[10px] font-bold text-warn"
-          >
-            ⏱ تايم آوت
-          </button>
-          <button
-            onClick={() => setChallengeStep('pick-side')}
-            className="px-2.5 py-1.5 bg-s1 border border-bd rounded-lg text-[10px] font-bold text-sec"
-          >
-            🖥 تحدي VAR
-          </button>
-          <button
-            onClick={() => setEventLogOpen(true)}
-            className="px-2.5 py-1.5 bg-s1 border border-bd rounded-lg text-[10px] font-bold text-t2"
-          >
-            📜 السجل
-          </button>
+          <div className="flex justify-center mb-2">
+            <button onClick={() => setServerPopup(true)} className="text-[10px] font-bold text-t3 underline">
+              {servingSide ? `🏐 يُرسل: ${servingSide === 'A' ? ownName : opponentName} (تصحيح)` : '🏐 حدّد من يبدأ بالإرسال'}
+            </button>
+          </div>
+
+          <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
+            <button
+              onClick={() => setRotationOpen('A')}
+              className="px-2.5 py-1.5 bg-s1 border border-bd rounded-lg text-[10px] font-bold text-pri"
+            >
+              🔄 التشكيلة
+            </button>
+            <div className="flex gap-1.5 flex-wrap justify-center">
+              <button
+                onClick={() => setSubModalSide('A')}
+                className="px-2.5 py-1.5 bg-s1 border border-bd rounded-lg text-[10px] font-bold text-ok"
+              >
+                🔁 تبديل
+              </button>
+              <button
+                onClick={() => setTimeoutPopup(true)}
+                className="px-2.5 py-1.5 bg-s1 border border-bd rounded-lg text-[10px] font-bold text-warn"
+              >
+                ⏱ تايم آوت
+              </button>
+              <button
+                onClick={() => setChallengeStep('pick-side')}
+                className="px-2.5 py-1.5 bg-s1 border border-bd rounded-lg text-[10px] font-bold text-sec"
+              >
+                🖥 تحدي VAR
+              </button>
+            </div>
+            {opponentTrackingEnabled && (
+              <button
+                onClick={() => setRotationOpen('B')}
+                className="px-2.5 py-1.5 bg-s1 border border-bd rounded-lg text-[10px] font-bold text-sec"
+              >
+                🔄 التشكيلة
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-start gap-0.5 mb-1.5">
+            <div className="flex-1">
+              <BenchStrip
+                players={benchPlayers('A')}
+                selectedId={benchSelection?.side === 'A' ? benchSelection.playerId : null}
+                onSelect={(id) => handleBenchSelect('A', id)}
+                variant="own"
+              />
+            </div>
+            <div className="w-[2px] self-stretch" />
+            <div className="flex-1">
+              {opponentTrackingEnabled && (
+                <BenchStrip
+                  players={benchPlayers('B')}
+                  selectedId={benchSelection?.side === 'B' ? benchSelection.playerId : null}
+                  onSelect={(id) => handleBenchSelect('B', id)}
+                  variant="opponent"
+                />
+              )}
+            </div>
+          </div>
+
+          <div className="relative w-full aspect-[4/5] bg-s2 border border-bd rounded-2xl overflow-hidden flex">
+            {renderHalf('A')}
+            <div className="w-[2px] bg-white/15 shrink-0 z-10" />
+            {renderHalf('B')}
+          </div>
+
+          <p className="text-center text-[10px] text-t3 mt-2">
+            نقرة على مكان سقوط الكرة = نقطة تلقائية للفريق الآخر • عند اكتساب الإرسال تُدوَّر التشكيلة تلقائياً
+          </p>
         </div>
-        {opponentTrackingEnabled && (
-          <button
-            onClick={() => setRotationOpen('B')}
-            className="px-2.5 py-1.5 bg-s1 border border-bd rounded-lg text-[10px] font-bold text-sec"
-          >
-            🔄 التشكيلة
-          </button>
-        )}
       </div>
-
-      <div className="flex items-start gap-0.5 mb-1.5">
-        <div className="flex-1">
-          <BenchStrip
-            players={benchPlayers('A')}
-            selectedId={benchSelection?.side === 'A' ? benchSelection.playerId : null}
-            onSelect={(id) => handleBenchSelect('A', id)}
-            variant="own"
-          />
-        </div>
-        <div className="w-[2px] self-stretch" />
-        <div className="flex-1">
-          {opponentTrackingEnabled && (
-            <BenchStrip
-              players={benchPlayers('B')}
-              selectedId={benchSelection?.side === 'B' ? benchSelection.playerId : null}
-              onSelect={(id) => handleBenchSelect('B', id)}
-              variant="opponent"
-            />
-          )}
-        </div>
-      </div>
-
-      <div className="relative w-full aspect-[4/5] bg-s2 border border-bd rounded-2xl overflow-hidden flex">
-        {renderHalf('A')}
-        <div className="w-[2px] bg-white/15 shrink-0 z-10" />
-        {renderHalf('B')}
-      </div>
-
-      <p className="text-center text-[10px] text-t3 mt-2">
-        نقرة على مكان سقوط الكرة = نقطة تلقائية للفريق الآخر • عند اكتساب الإرسال تُدوَّر التشكيلة تلقائياً
-      </p>
 
       {rotationOpen && (
         <RotationEditor
@@ -251,6 +257,14 @@ export function CourtMap({ matchId }: CourtMapProps) {
           onAssign={(position, playerId) => assignRotation(matchId, rotationOpen, set, position as RotationPosition, playerId)}
           onRotate={() => rotateLineup(matchId, rotationOpen, set)}
           onClose={() => setRotationOpen(null)}
+        />
+      )}
+
+      {addOpponentAt !== null && (
+        <AddOpponentPlayerPopup
+          position={addOpponentAt}
+          onAdd={handleAddOpponentPlayer}
+          onClose={() => setAddOpponentAt(null)}
         />
       )}
 
@@ -349,17 +363,55 @@ export function CourtMap({ matchId }: CourtMapProps) {
         />
       )}
 
-      {eventLogOpen && (
-        <EventLogSheet
-          events={match.events}
-          ownName={ownName}
-          opponentName={opponentName}
-          findPlayer={findPlayer}
-          onClose={() => setEventLogOpen(false)}
-        />
-      )}
-
       <EventUndoBar matchId={matchId} ownName={ownName} opponentName={opponentName} />
+    </div>
+  )
+}
+
+interface AddOpponentPlayerPopupProps {
+  position: RotationPosition
+  onAdd: (name: string, number?: number) => void
+  onClose: () => void
+}
+
+function AddOpponentPlayerPopup({ position, onAdd, onClose }: AddOpponentPlayerPopupProps) {
+  const [name, setName] = useState('')
+  const [number, setNumber] = useState('')
+
+  const handleAdd = () => {
+    const trimmed = name.trim()
+    if (!trimmed) return
+    onAdd(trimmed, number === '' ? undefined : Number(number))
+  }
+
+  return (
+    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/60" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="bg-s1 border border-bd rounded-2xl p-4 w-72">
+        <div className="text-[13px] font-extrabold text-center mb-3">إضافة لاعب منافس — الموقع {position}</div>
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+          placeholder="اسم اللاعب"
+          autoFocus
+          className="mb-2"
+        />
+        <input
+          value={number}
+          onChange={(e) => setNumber(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+          type="number"
+          placeholder="الرقم (اختياري)"
+          className="mb-3"
+        />
+        <button
+          onClick={handleAdd}
+          disabled={!name.trim()}
+          className="w-full py-3 bg-pri text-white rounded-xl font-extrabold text-[13px] disabled:opacity-40"
+        >
+          إضافة
+        </button>
+      </div>
     </div>
   )
 }

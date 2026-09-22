@@ -17,6 +17,8 @@ import { SettingsScreen } from './components/settings/SettingsScreen'
 import { ScoutingReportScreen } from './components/scouting/ScoutingReportScreen'
 import { TrainingListScreen } from './components/training/TrainingListScreen'
 import { NewTrainingScreen } from './components/training/NewTrainingScreen'
+import { ScheduleTrainingScreen } from './components/training/ScheduleTrainingScreen'
+import { TrainingAttendanceScreen } from './components/training/TrainingAttendanceScreen'
 import { TrainingSessionScreen } from './components/training/TrainingSessionScreen'
 import { PublicLiveScoreScreen } from './components/live-public/PublicLiveScoreScreen'
 import { AdminScreen } from './components/admin/AdminScreen'
@@ -68,6 +70,8 @@ function AuthenticatedApp() {
       <Route path="/match/:id/report" element={<ReportScreen />} />
       <Route path="/scouting/:presetId" element={<ScoutingReportScreen />} />
       <Route path="/training/new" element={<NewTrainingScreen />} />
+      <Route path="/training/schedule" element={<ScheduleTrainingScreen />} />
+      <Route path="/training/:id/start" element={<TrainingAttendanceScreen />} />
       <Route path="/training/:id" element={<TrainingSessionScreen />} />
       <Route path="/rules" element={<RulesScreen />} />
     </Routes>
