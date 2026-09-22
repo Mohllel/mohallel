@@ -20,6 +20,7 @@ import { NewTrainingScreen } from './components/training/NewTrainingScreen'
 import { TrainingSessionScreen } from './components/training/TrainingSessionScreen'
 import { PublicLiveScoreScreen } from './components/live-public/PublicLiveScoreScreen'
 import { AdminScreen } from './components/admin/AdminScreen'
+import { RulesScreen } from './components/rules/RulesScreen'
 
 function App() {
   return (
@@ -68,6 +69,7 @@ function AuthenticatedApp() {
       <Route path="/scouting/:presetId" element={<ScoutingReportScreen />} />
       <Route path="/training/new" element={<NewTrainingScreen />} />
       <Route path="/training/:id" element={<TrainingSessionScreen />} />
+      <Route path="/rules" element={<RulesScreen />} />
     </Routes>
   )
 }

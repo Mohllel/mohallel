@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useClubStore } from '../../store/useClubStore'
 import { useAuthStore } from '../../store/useAuthStore'
 import { LogoUpload } from '../shared/LogoUpload'
@@ -93,6 +94,14 @@ export function SettingsScreen() {
       </div>
 
       <CollaborationSection />
+
+      <Link
+        to="/rules"
+        className="flex items-center justify-between bg-s1 border border-bd rounded-2xl p-4 mb-3 font-extrabold text-[14px]"
+      >
+        📖 قوانين ومصطلحات الكرة الطائرة
+        <span className="text-t3">←</span>
+      </Link>
 
       <div className="bg-s1 border border-bd rounded-2xl p-4 mb-3 flex items-center justify-between">
         <div>
