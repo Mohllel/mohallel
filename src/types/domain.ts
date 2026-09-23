@@ -158,4 +158,6 @@ export interface Match {
   videoStartedAt?: number | null
   /** هل البث المباشر للنتيجة مفعَّل لهذه المباراة (يتطلب Supabase) */
   liveShareEnabled?: boolean
+  /** true أثناء تايم آوت — يوقف تسجيل النقاط/الإحصائيات مؤقتاً حتى الضغط على "ابدأ المباراة" */
+  paused?: boolean
 }
