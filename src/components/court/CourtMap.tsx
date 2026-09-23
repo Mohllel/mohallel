@@ -6,49 +6,29 @@ import { useMatchPlayers } from '../../lib/useMatchPlayers'
 import type { Player, RotationPosition, TeamSide } from '../../types/domain'
 import { BenchStrip } from './BenchStrip'
 import { CourtZoneOverlay } from './CourtZoneOverlay'
-import { EventLogPanel } from './EventLogPanel'
-import { EventUndoBar } from './EventUndoBar'
 import { PlayerCircle } from './PlayerCircle'
 import { RotationEditor } from './RotationEditor'
-import { SubstitutionModal } from './SubstitutionModal'
 
 interface CourtMapProps {
   matchId: string
+  /** أثناء تايم آوت — يعطّل تسجيل النقاط بالنقر على مكان سقوط الكرة */
+  paused: boolean
 }
 
-type ChallengeStep = 'pick-side' | TeamSide | null
-
-export function CourtMap({ matchId }: CourtMapProps) {
+export function CourtMap({ matchId, paused }: CourtMapProps) {
   const ownPlayers = useMatchPlayers(matchId)
   const match = useMatchesStore((s) => s.matches[matchId])
-  const {
-    getRotation,
-    assignRotation,
-    rotateLineup,
-    bumpScore,
-    logPointAtZone,
-    logTimeout,
-    logChallenge,
-    substitutePlayer,
-    setServingSide,
-    getServingSide,
-  } = useMatchesStore()
+  const { getRotation, assignRotation, rotateLineup, logPointAtZone, substitutePlayer } = useMatchesStore()
   const { clubName, isPro, opponentRosters, addOpponentPlayer } = useClubStore()
 
-  const [rotationOpen, setRotationOpen] = useState<TeamSide | null>(null)
+  const [rotationOpen, setRotationOpen] = useState(false)
   const [addOpponentAt, setAddOpponentAt] = useState<RotationPosition | null>(null)
-  const [pointPopup, setPointPopup] = useState(false)
-  const [timeoutPopup, setTimeoutPopup] = useState(false)
-  const [challengeStep, setChallengeStep] = useState<ChallengeStep>(null)
-  const [serverPopup, setServerPopup] = useState(false)
-  const [subModalSide, setSubModalSide] = useState<TeamSide | null>(null)
   const [benchSelection, setBenchSelection] = useState<{ side: TeamSide; playerId: string } | null>(null)
   const [flash, setFlash] = useState<{ side: TeamSide; key: number } | null>(null)
   const flashKeyRef = useRef(0)
   const prevScoreRef = useRef<{ a: number; b: number } | null>(null)
 
   const ownName = clubName || 'فريقك'
-  const opponentName = match?.opponentName || 'المنافس'
 
   useEffect(() => {
     if (!match) return
@@ -81,10 +61,9 @@ export function CourtMap({ matchId }: CourtMapProps) {
     const onCourtIds = new Set(rotation(side).map((s) => s.playerId).filter(Boolean))
     return playersBySide(side).filter((p) => !onCourtIds.has(p.id))
   }
-  const findPlayer = (side: TeamSide, playerId: string | undefined) =>
-    playerId ? playersBySide(side).find((p) => p.id === playerId) : undefined
 
   const handleZoneTap = (landedInSide: TeamSide, zone: number) => {
+    if (paused) return
     logPointAtZone(matchId, landedInSide, zone)
   }
 
@@ -136,7 +115,7 @@ export function CourtMap({ matchId }: CourtMapProps) {
                 variant={side === 'A' ? 'own' : 'opponent'}
                 highlighted={!!(benchSelection && benchSelection.side === side && player != null)}
                 onClick={() => handleCircleClick(side, cp.position)}
-                onEmptyClick={() => (side === 'A' ? setRotationOpen(side) : setAddOpponentAt(cp.position))}
+                onEmptyClick={() => (side === 'A' ? setRotationOpen(true) : setAddOpponentAt(cp.position))}
               />
             )
           })
@@ -149,114 +128,56 @@ export function CourtMap({ matchId }: CourtMapProps) {
     )
   }
 
-  const servingSide = getServingSide(matchId, set)
-
   return (
     <div className="p-3 max-w-[640px] mx-auto">
-      <div className="flex gap-2 items-start">
-        <EventLogPanel events={match.events} ownName={ownName} opponentName={opponentName} findPlayer={findPlayer} />
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between mb-1 gap-2">
-            <span className="text-[12px] font-extrabold text-t2 flex-1 truncate">
-              {ownName} {servingSide === 'A' && <span className="text-[10px]">🏐</span>}
-            </span>
-            <button
-              onClick={() => setPointPopup(true)}
-              className="px-4 py-1.5 bg-err text-white rounded-lg text-[12px] font-extrabold shadow-[0_2px_10px_rgba(239,68,68,0.35)]"
-            >
-              ⚡ نقطة
-            </button>
-            <span className="text-[12px] font-extrabold text-t2 flex-1 truncate text-left">
-              {servingSide === 'B' && <span className="text-[10px]">🏐</span>} {opponentName}
-            </span>
-          </div>
-
-          <div className="flex justify-center mb-2">
-            <button onClick={() => setServerPopup(true)} className="text-[10px] font-bold text-t3 underline">
-              {servingSide ? `🏐 يُرسل: ${servingSide === 'A' ? ownName : opponentName} (تصحيح)` : '🏐 حدّد من يبدأ بالإرسال'}
-            </button>
-          </div>
-
-          <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
-            <button
-              onClick={() => setRotationOpen('A')}
-              className="px-2.5 py-1.5 bg-s1 border border-bd rounded-lg text-[10px] font-bold text-pri"
-            >
-              🔄 التشكيلة
-            </button>
-            <div className="flex gap-1.5 flex-wrap justify-center">
-              <button
-                onClick={() => setSubModalSide('A')}
-                className="px-2.5 py-1.5 bg-s1 border border-bd rounded-lg text-[10px] font-bold text-ok"
-              >
-                🔁 تبديل
-              </button>
-              <button
-                onClick={() => setTimeoutPopup(true)}
-                className="px-2.5 py-1.5 bg-s1 border border-bd rounded-lg text-[10px] font-bold text-warn"
-              >
-                ⏱ تايم آوت
-              </button>
-              <button
-                onClick={() => setChallengeStep('pick-side')}
-                className="px-2.5 py-1.5 bg-s1 border border-bd rounded-lg text-[10px] font-bold text-sec"
-              >
-                🖥 تحدي VAR
-              </button>
-            </div>
-            {opponentTrackingEnabled && (
-              <button
-                onClick={() => setRotationOpen('B')}
-                className="px-2.5 py-1.5 bg-s1 border border-bd rounded-lg text-[10px] font-bold text-sec"
-              >
-                🔄 التشكيلة
-              </button>
-            )}
-          </div>
-
-          <div className="flex items-start gap-0.5 mb-1.5">
-            <div className="flex-1">
-              <BenchStrip
-                players={benchPlayers('A')}
-                selectedId={benchSelection?.side === 'A' ? benchSelection.playerId : null}
-                onSelect={(id) => handleBenchSelect('A', id)}
-                variant="own"
-              />
-            </div>
-            <div className="w-[2px] self-stretch" />
-            <div className="flex-1">
-              {opponentTrackingEnabled && (
-                <BenchStrip
-                  players={benchPlayers('B')}
-                  selectedId={benchSelection?.side === 'B' ? benchSelection.playerId : null}
-                  onSelect={(id) => handleBenchSelect('B', id)}
-                  variant="opponent"
-                />
-              )}
-            </div>
-          </div>
-
-          <div className="relative w-full aspect-[4/5] bg-s2 border border-bd rounded-2xl overflow-hidden flex">
-            {renderHalf('A')}
-            <div className="w-[2px] bg-white/15 shrink-0 z-10" />
-            {renderHalf('B')}
-          </div>
-
-          <p className="text-center text-[10px] text-t3 mt-2">
-            نقرة على مكان سقوط الكرة = نقطة تلقائية للفريق الآخر • عند اكتساب الإرسال تُدوَّر التشكيلة تلقائياً
-          </p>
+      <div className="flex items-start gap-0.5 mb-1.5">
+        <div className="flex-1">
+          <BenchStrip
+            players={benchPlayers('A')}
+            selectedId={benchSelection?.side === 'A' ? benchSelection.playerId : null}
+            onSelect={(id) => handleBenchSelect('A', id)}
+            variant="own"
+          />
+        </div>
+        <div className="w-[2px] self-stretch" />
+        <div className="flex-1">
+          {opponentTrackingEnabled && (
+            <BenchStrip
+              players={benchPlayers('B')}
+              selectedId={benchSelection?.side === 'B' ? benchSelection.playerId : null}
+              onSelect={(id) => handleBenchSelect('B', id)}
+              variant="opponent"
+            />
+          )}
         </div>
       </div>
 
+      <div className="relative w-full aspect-[4/5] bg-s2 border border-bd rounded-2xl overflow-hidden flex">
+        {renderHalf('A')}
+        <div className="w-[2px] bg-white/15 shrink-0 z-10" />
+        {renderHalf('B')}
+
+        {paused && (
+          <div className="absolute inset-0 z-30 flex items-center justify-center bg-bg/70 backdrop-blur-[1px]">
+            <span className="text-[12px] font-extrabold text-warn bg-s1 border border-warn/40 rounded-xl px-3 py-1.5">
+              ⏸ توقفت النقر لتسجيل النقاط أثناء التايم آوت
+            </span>
+          </div>
+        )}
+      </div>
+
+      <p className="text-center text-[10px] text-t3 mt-2">
+        نقرة على مكان سقوط الكرة = نقطة تلقائية للفريق الآخر • عند اكتساب الإرسال تُدوَّر التشكيلة تلقائياً
+      </p>
+
       {rotationOpen && (
         <RotationEditor
-          title={rotationOpen === 'A' ? ownName : opponentName}
-          rotation={rotation(rotationOpen)}
-          players={playersBySide(rotationOpen)}
-          onAssign={(position, playerId) => assignRotation(matchId, rotationOpen, set, position as RotationPosition, playerId)}
-          onRotate={() => rotateLineup(matchId, rotationOpen, set)}
-          onClose={() => setRotationOpen(null)}
+          title={ownName}
+          rotation={rotation('A')}
+          players={playersBySide('A')}
+          onAssign={(position, playerId) => assignRotation(matchId, 'A', set, position as RotationPosition, playerId)}
+          onRotate={() => rotateLineup(matchId, 'A', set)}
+          onClose={() => setRotationOpen(false)}
         />
       )}
 
@@ -267,103 +188,6 @@ export function CourtMap({ matchId }: CourtMapProps) {
           onClose={() => setAddOpponentAt(null)}
         />
       )}
-
-      {pointPopup && (
-        <SidePickerPopup
-          title="نقطة سريعة (بلا مكان محدد)"
-          ownName={ownName}
-          opponentName={opponentName}
-          onPick={(side) => {
-            bumpScore(matchId, side, 1)
-            setPointPopup(false)
-          }}
-          onClose={() => setPointPopup(false)}
-        />
-      )}
-
-      {timeoutPopup && (
-        <SidePickerPopup
-          title="تايم آوت — لأي فريق؟"
-          ownName={ownName}
-          opponentName={opponentName}
-          onPick={(side) => {
-            logTimeout(matchId, side)
-            setTimeoutPopup(false)
-          }}
-          onClose={() => setTimeoutPopup(false)}
-        />
-      )}
-
-      {challengeStep === 'pick-side' && (
-        <SidePickerPopup
-          title="تحدي (VAR) — لأي فريق؟"
-          ownName={ownName}
-          opponentName={opponentName}
-          onPick={(side) => setChallengeStep(side)}
-          onClose={() => setChallengeStep(null)}
-        />
-      )}
-
-      {(challengeStep === 'A' || challengeStep === 'B') && (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/60" onClick={() => setChallengeStep(null)}>
-          <div onClick={(e) => e.stopPropagation()} className="bg-s1 border border-bd rounded-2xl p-4 w-72">
-            <div className="text-[13px] font-extrabold text-center mb-3">
-              نتيجة تحدي {challengeStep === 'A' ? ownName : opponentName}؟
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  logChallenge(matchId, challengeStep, 'won')
-                  setChallengeStep(null)
-                }}
-                className="flex-1 py-3 bg-ok text-white rounded-xl font-extrabold text-[13px]"
-              >
-                نجح ✅
-              </button>
-              <button
-                onClick={() => {
-                  logChallenge(matchId, challengeStep, 'lost')
-                  setChallengeStep(null)
-                }}
-                className="flex-1 py-3 bg-err text-white rounded-xl font-extrabold text-[13px]"
-              >
-                فشل ❌
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {serverPopup && (
-        <SidePickerPopup
-          title="من يبدأ بالإرسال بهذا الشوط؟"
-          ownName={ownName}
-          opponentName={opponentName}
-          onPick={(side) => {
-            setServingSide(matchId, set, side)
-            setServerPopup(false)
-          }}
-          onClose={() => setServerPopup(false)}
-        />
-      )}
-
-      {subModalSide && (
-        <SubstitutionModal
-          side={subModalSide}
-          ownName={ownName}
-          opponentName={opponentName}
-          rotation={rotation(subModalSide)}
-          players={playersBySide(subModalSide)}
-          benchPlayers={benchPlayers(subModalSide)}
-          onSubstitute={(position, incomingPlayerId) =>
-            substitutePlayer(matchId, subModalSide, set, position as RotationPosition, incomingPlayerId)
-          }
-          onSwitchSide={opponentTrackingEnabled ? () => setSubModalSide(subModalSide === 'A' ? 'B' : 'A') : undefined}
-          onClose={() => setSubModalSide(null)}
-        />
-      )}
-
-      <EventUndoBar matchId={matchId} ownName={ownName} opponentName={opponentName} />
     </div>
   )
 }
@@ -411,32 +235,6 @@ function AddOpponentPlayerPopup({ position, onAdd, onClose }: AddOpponentPlayerP
         >
           إضافة
         </button>
-      </div>
-    </div>
-  )
-}
-
-interface SidePickerPopupProps {
-  title: string
-  ownName: string
-  opponentName: string
-  onPick: (side: TeamSide) => void
-  onClose: () => void
-}
-
-function SidePickerPopup({ title, ownName, opponentName, onPick, onClose }: SidePickerPopupProps) {
-  return (
-    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/60" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="bg-s1 border border-bd rounded-2xl p-4 w-72">
-        <div className="text-[13px] font-extrabold text-center mb-3">{title}</div>
-        <div className="flex gap-2">
-          <button onClick={() => onPick('A')} className="flex-1 py-3 bg-pri text-white rounded-xl font-extrabold text-[13px]">
-            {ownName}
-          </button>
-          <button onClick={() => onPick('B')} className="flex-1 py-3 bg-err text-white rounded-xl font-extrabold text-[13px]">
-            {opponentName}
-          </button>
-        </div>
       </div>
     </div>
   )

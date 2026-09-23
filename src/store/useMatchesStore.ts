@@ -101,6 +101,8 @@ interface MatchesActions {
   /** خريطة الملعب: نقطة بمكان سقوط الكرة (بلا مهارة) — landedInSide هو الملعب الذي سقطت فيه الكرة */
   logPointAtZone: (matchId: string, landedInSide: TeamSide, zone: number) => void
   logTimeout: (matchId: string, side: TeamSide) => void
+  /** يُنهي حالة التوقف (تايم آوت) ويسمح مجدداً بتسجيل النقاط/الإحصائيات */
+  resumeMatch: (matchId: string) => void
   logChallenge: (matchId: string, side: TeamSide, result: 'won' | 'lost') => void
   substitutePlayer: (matchId: string, side: TeamSide, setNo: number, position: RotationPosition, incomingPlayerId: string) => void
   undoLastEvent: (matchId: string) => void
@@ -170,6 +172,7 @@ export const useMatchesStore = create<Store>()(
           events: [],
           rotation: { A: { 1: emptyRotation() }, B: { 1: emptyRotation() } },
           servingSide: {},
+          paused: false,
         }
         set((st) => ({ matches: { ...st.matches, [id]: match } }))
         return id
@@ -207,7 +210,7 @@ export const useMatchesStore = create<Store>()(
             A: match.rotation.A[n] ? match.rotation.A : { ...match.rotation.A, [n]: emptyRotation() },
             B: match.rotation.B[n] ? match.rotation.B : { ...match.rotation.B, [n]: emptyRotation() },
           }
-          return { matches: { ...st.matches, [matchId]: { ...match, set: n, rotation } } }
+          return { matches: { ...st.matches, [matchId]: { ...match, set: n, rotation, paused: false } } }
         }),
       bumpScore: (matchId, side, delta) =>
         set((st) => {
@@ -225,10 +228,15 @@ export const useMatchesStore = create<Store>()(
         }),
 
       addAction: (matchId, input) => {
+        const current = get().matches[matchId]
+        if (!current || current.paused) return
         set((st) => {
           const match = st.matches[matchId]
           if (!match) return st
-          const action: Action = { id: uid(), set: match.set, ts: Date.now(), ...input }
+          const autoPosition =
+            input.rotationPosition ??
+            match.rotation[input.side]?.[match.set]?.find((slot) => slot.playerId === input.playerId)?.position
+          const action: Action = { id: uid(), set: match.set, ts: Date.now(), ...input, rotationPosition: autoPosition }
           let next: Match = { ...match, act: [...match.act, action] }
 
           const record: UndoRecord = { actionId: action.id }
@@ -294,6 +302,8 @@ export const useMatchesStore = create<Store>()(
       },
 
       logPointAtZone: (matchId, landedInSide, zone) => {
+        const current = get().matches[matchId]
+        if (!current || current.paused) return
         const scoringSide = otherSide(landedInSide)
         set((st) => {
           const match = st.matches[matchId]
@@ -325,7 +335,7 @@ export const useMatchesStore = create<Store>()(
           const event: MatchEvent = { id: uid(), ts: Date.now(), set: match.set, type: 'timeout', side }
           eventUndoRegistry[matchId] = { eventId: event.id }
           return {
-            matches: { ...st.matches, [matchId]: { ...match, events: [...match.events, event] } },
+            matches: { ...st.matches, [matchId]: { ...match, events: [...match.events, event], paused: true } },
             _undoEventIds: { ...st._undoEventIds, [matchId]: event.id },
           }
         })
@@ -334,6 +344,12 @@ export const useMatchesStore = create<Store>()(
           set((st) => ({ _undoEventIds: { ...st._undoEventIds, [matchId]: null } }))
         }, 3500)
       },
+      resumeMatch: (matchId) =>
+        set((st) => {
+          const match = st.matches[matchId]
+          if (!match) return st
+          return { matches: { ...st.matches, [matchId]: { ...match, paused: false } } }
+        }),
       logChallenge: (matchId, side, result) => {
         set((st) => {
           const match = st.matches[matchId]

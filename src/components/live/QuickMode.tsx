@@ -9,10 +9,11 @@ import { SkillLegend } from './SkillLegend'
 
 interface QuickModeProps {
   matchId: string
+  paused: boolean
   onRequestQuality: (rect: DOMRect, playerId: string, skill: SkillKey) => void
 }
 
-export function QuickMode({ matchId, onRequestQuality }: QuickModeProps) {
+export function QuickMode({ matchId, paused, onRequestQuality }: QuickModeProps) {
   const players = useMatchPlayers(matchId)
   const match = useMatchesStore((s) => s.matches[matchId])
   const addAction = useMatchesStore((s) => s.addAction)
@@ -21,12 +22,14 @@ export function QuickMode({ matchId, onRequestQuality }: QuickModeProps) {
   const { act, set } = match
 
   const handleDown = (key: string, rect: DOMRect, playerId: string, skill: SkillKey) => {
+    if (paused) return
     timers.current[key] = setTimeout(() => {
       onRequestQuality(rect, playerId, skill)
       timers.current[key] = null
     }, 400)
   }
   const handleUp = (key: string, playerId: string, skill: SkillKey) => {
+    if (paused) return
     if (timers.current[key]) {
       clearTimeout(timers.current[key]!)
       timers.current[key] = null
@@ -41,7 +44,14 @@ export function QuickMode({ matchId, onRequestQuality }: QuickModeProps) {
   }
 
   return (
-    <>
+    <div className="relative">
+      {paused && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-bg/70 backdrop-blur-[1px] rounded-2xl">
+          <span className="text-[12px] font-extrabold text-warn bg-s1 border border-warn/40 rounded-xl px-3 py-1.5">
+            ⏸ التسجيل متوقف أثناء التايم آوت
+          </span>
+        </div>
+      )}
       <div className="text-center text-[11px] text-t3 bg-s1 mx-2 mb-1 rounded-[10px] border border-bd py-1.5">
         النقر يسجّل <strong className="text-ok">جيد (+)</strong> مباشرة — اضغط مطوّلاً لتغيير التقييم
       </div>
@@ -78,8 +88,9 @@ export function QuickMode({ matchId, onRequestQuality }: QuickModeProps) {
                         }
                         onPointerUp={() => handleUp(key, p.id, s.k)}
                         onPointerLeave={() => handleLeave(key)}
+                        disabled={paused}
                         style={count ? { borderColor: 'var(--color-bl)', color: s.c } : undefined}
-                        className="w-full min-w-9 h-[42px] rounded-lg bg-s1 border-[1.5px] border-bd text-t2 text-[13px] font-extrabold flex items-center justify-center"
+                        className="w-full min-w-9 h-[42px] rounded-lg bg-s1 border-[1.5px] border-bd text-t2 text-[13px] font-extrabold flex items-center justify-center disabled:opacity-40"
                       >
                         {count || ''}
                       </button>
@@ -101,6 +112,6 @@ export function QuickMode({ matchId, onRequestQuality }: QuickModeProps) {
           </tfoot>
         </table>
       </div>
-    </>
+    </div>
   )
 }

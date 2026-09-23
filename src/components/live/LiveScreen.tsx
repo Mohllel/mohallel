@@ -5,6 +5,7 @@ import { Header } from '../layout/Header'
 import { CourtMap } from '../court/CourtMap'
 import type { Quality, SkillKey } from '../../types/domain'
 import { GridMode } from './GridMode'
+import { MatchControlBar } from './MatchControlBar'
 import { ModeToggle } from './ModeToggle'
 import { QualityPopup } from './QualityPopup'
 import { QuickMode } from './QuickMode'
@@ -57,10 +58,11 @@ export function LiveScreen() {
       )}
 
       <ModeToggle matchId={id} />
+      <MatchControlBar matchId={id} />
 
-      {match.mode === 'grid' && <GridMode matchId={id} onRequestQuality={requestQuality} />}
-      {match.mode === 'quick' && <QuickMode matchId={id} onRequestQuality={requestQuality} />}
-      {match.mode === 'court' && <CourtMap matchId={id} />}
+      {match.mode === 'grid' && <GridMode matchId={id} paused={!!match.paused} onRequestQuality={requestQuality} />}
+      {match.mode === 'quick' && <QuickMode matchId={id} paused={!!match.paused} onRequestQuality={requestQuality} />}
+      {match.mode === 'court' && <CourtMap matchId={id} paused={!!match.paused} />}
 
       {pending && (
         <QualityPopup anchorRect={pending.rect} onPick={pickQuality} onClose={() => setPending(null)} />

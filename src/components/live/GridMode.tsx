@@ -7,17 +7,25 @@ import { SkillLegend } from './SkillLegend'
 
 interface GridModeProps {
   matchId: string
+  paused: boolean
   onRequestQuality: (rect: DOMRect, playerId: string, skill: SkillKey) => void
 }
 
-export function GridMode({ matchId, onRequestQuality }: GridModeProps) {
+export function GridMode({ matchId, paused, onRequestQuality }: GridModeProps) {
   const players = useMatchPlayers(matchId)
   const match = useMatchesStore((s) => s.matches[matchId])
   if (!match) return null
   const { act, set } = match
 
   return (
-    <div className="p-2">
+    <div className="p-2 relative">
+      {paused && (
+        <div className="absolute inset-0 z-30 flex items-center justify-center bg-bg/70 backdrop-blur-[1px] rounded-2xl">
+          <span className="text-[12px] font-extrabold text-warn bg-s1 border border-warn/40 rounded-xl px-3 py-1.5">
+            ⏸ التسجيل متوقف أثناء التايم آوت
+          </span>
+        </div>
+      )}
       <SkillLegend />
       <div className="overflow-x-auto">
       <table className="w-full border-separate [border-spacing:3px]">
@@ -51,8 +59,9 @@ export function GridMode({ matchId, onRequestQuality }: GridModeProps) {
                   <td key={s.k} className="p-0 text-center align-middle">
                     <button
                       onClick={(e) => onRequestQuality(e.currentTarget.getBoundingClientRect(), p.id, s.k)}
+                      disabled={paused}
                       style={count ? { borderColor: 'var(--color-bl)', color: s.c } : undefined}
-                      className="w-full min-w-9 h-[42px] rounded-lg bg-s1 border-[1.5px] border-bd text-t2 text-[13px] font-extrabold flex items-center justify-center"
+                      className="w-full min-w-9 h-[42px] rounded-lg bg-s1 border-[1.5px] border-bd text-t2 text-[13px] font-extrabold flex items-center justify-center disabled:opacity-40"
                     >
                       {count || ''}
                     </button>

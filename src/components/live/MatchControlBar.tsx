@@ -1,0 +1,278 @@
+import { useState } from 'react'
+import { useClubStore } from '../../store/useClubStore'
+import { useMatchesStore } from '../../store/useMatchesStore'
+import { useMatchPlayers } from '../../lib/useMatchPlayers'
+import type { Player, RotationPosition, TeamSide } from '../../types/domain'
+import { EventLogPanel } from '../court/EventLogPanel'
+import { EventUndoBar } from '../court/EventUndoBar'
+import { RotationEditor } from '../court/RotationEditor'
+import { SubstitutionModal } from '../court/SubstitutionModal'
+
+interface MatchControlBarProps {
+  matchId: string
+}
+
+type ChallengeStep = 'pick-side' | TeamSide | null
+
+/** شريط تحكّم مشترك (نتيجة/إرسال/سجل/تايم آوت/تحدي/تبديل/تشكيلة) يظهر بنفس الشكل في الأوضاع الثلاثة — دقيق، سريع، خريطة الملعب */
+export function MatchControlBar({ matchId }: MatchControlBarProps) {
+  const match = useMatchesStore((s) => s.matches[matchId])
+  const {
+    getRotation,
+    assignRotation,
+    rotateLineup,
+    bumpScore,
+    logTimeout,
+    logChallenge,
+    substitutePlayer,
+    setServingSide,
+    getServingSide,
+    resumeMatch,
+  } = useMatchesStore()
+  const ownPlayers = useMatchPlayers(matchId)
+  const { clubName, isPro, opponentRosters } = useClubStore()
+
+  const [rotationOpen, setRotationOpen] = useState<TeamSide | null>(null)
+  const [pointPopup, setPointPopup] = useState(false)
+  const [timeoutPopup, setTimeoutPopup] = useState(false)
+  const [challengeStep, setChallengeStep] = useState<ChallengeStep>(null)
+  const [serverPopup, setServerPopup] = useState(false)
+  const [subModalSide, setSubModalSide] = useState<TeamSide | null>(null)
+
+  if (!match) return null
+  const set = match.set
+  const ownName = clubName || 'فريقك'
+  const opponentName = match.opponentName || 'المنافس'
+  const opponentRoster = match.opponentPresetId ? opponentRosters[match.opponentPresetId] ?? [] : []
+  const opponentTrackingEnabled = isPro
+  const paused = !!match.paused
+
+  const playersBySide = (side: TeamSide): Player[] => (side === 'A' ? ownPlayers : opponentRoster)
+  const rotation = (side: TeamSide) => getRotation(matchId, side, set)
+  const benchPlayers = (side: TeamSide): Player[] => {
+    const onCourtIds = new Set(rotation(side).map((s) => s.playerId).filter(Boolean))
+    return playersBySide(side).filter((p) => !onCourtIds.has(p.id))
+  }
+
+  const servingSide = getServingSide(matchId, set)
+
+  return (
+    <div className="px-3 pt-2 max-w-[640px] mx-auto">
+      <div className="flex gap-2 items-start">
+        <EventLogPanel
+          events={match.events}
+          ownName={ownName}
+          opponentName={opponentName}
+          findPlayer={(side, playerId) => (playerId ? playersBySide(side).find((p) => p.id === playerId) : undefined)}
+        />
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between mb-1 gap-2">
+            <span className="text-[12px] font-extrabold text-t2 flex-1 truncate">
+              {ownName} {servingSide === 'A' && <span className="text-[10px]">🏐</span>}
+            </span>
+            <button
+              onClick={() => setPointPopup(true)}
+              disabled={paused}
+              className="px-4 py-1.5 bg-err text-white rounded-lg text-[12px] font-extrabold shadow-[0_2px_10px_rgba(239,68,68,0.35)] disabled:opacity-30"
+            >
+              ⚡ نقطة
+            </button>
+            <span className="text-[12px] font-extrabold text-t2 flex-1 truncate text-left">
+              {servingSide === 'B' && <span className="text-[10px]">🏐</span>} {opponentName}
+            </span>
+          </div>
+
+          <div className="flex justify-center mb-2">
+            <button onClick={() => setServerPopup(true)} className="text-[10px] font-bold text-t3 underline">
+              {servingSide ? `🏐 يُرسل: ${servingSide === 'A' ? ownName : opponentName} (تصحيح)` : '🏐 حدّد من يبدأ بالإرسال'}
+            </button>
+          </div>
+
+          {paused ? (
+            <div className="flex items-center justify-between gap-2 mb-2 bg-warn/10 border border-warn/40 rounded-xl px-3 py-2.5">
+              <span className="text-[11px] font-extrabold text-warn">⏸ المباراة متوقفة (تايم آوت)</span>
+              <button
+                onClick={() => resumeMatch(matchId)}
+                className="px-4 py-2 bg-gradient-to-br from-ok to-[#059669] text-white rounded-lg text-[12px] font-black shadow-[0_4px_16px_rgba(16,185,129,0.3)]"
+              >
+                ▶ ابدأ المباراة
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between mb-2 gap-2 flex-wrap">
+              <button
+                onClick={() => setRotationOpen('A')}
+                className="px-2.5 py-1.5 bg-s1 border border-bd rounded-lg text-[10px] font-bold text-pri"
+              >
+                🔄 التشكيلة
+              </button>
+              <div className="flex gap-1.5 flex-wrap justify-center">
+                <button
+                  onClick={() => setSubModalSide('A')}
+                  className="px-2.5 py-1.5 bg-s1 border border-bd rounded-lg text-[10px] font-bold text-ok"
+                >
+                  🔁 تبديل
+                </button>
+                <button
+                  onClick={() => setTimeoutPopup(true)}
+                  className="px-2.5 py-1.5 bg-s1 border border-bd rounded-lg text-[10px] font-bold text-warn"
+                >
+                  ⏱ تايم آوت
+                </button>
+                <button
+                  onClick={() => setChallengeStep('pick-side')}
+                  className="px-2.5 py-1.5 bg-s1 border border-bd rounded-lg text-[10px] font-bold text-sec"
+                >
+                  🖥 تحدي VAR
+                </button>
+              </div>
+              {opponentTrackingEnabled && (
+                <button
+                  onClick={() => setRotationOpen('B')}
+                  className="px-2.5 py-1.5 bg-s1 border border-bd rounded-lg text-[10px] font-bold text-sec"
+                >
+                  🔄 التشكيلة
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {rotationOpen && (
+        <RotationEditor
+          title={rotationOpen === 'A' ? ownName : opponentName}
+          rotation={rotation(rotationOpen)}
+          players={playersBySide(rotationOpen)}
+          onAssign={(position, playerId) => assignRotation(matchId, rotationOpen, set, position as RotationPosition, playerId)}
+          onRotate={() => rotateLineup(matchId, rotationOpen, set)}
+          onClose={() => setRotationOpen(null)}
+        />
+      )}
+
+      {pointPopup && (
+        <SidePickerPopup
+          title="نقطة سريعة (بلا مكان محدد)"
+          ownName={ownName}
+          opponentName={opponentName}
+          onPick={(side) => {
+            bumpScore(matchId, side, 1)
+            setPointPopup(false)
+          }}
+          onClose={() => setPointPopup(false)}
+        />
+      )}
+
+      {timeoutPopup && (
+        <SidePickerPopup
+          title="تايم آوت — لأي فريق؟"
+          ownName={ownName}
+          opponentName={opponentName}
+          onPick={(side) => {
+            logTimeout(matchId, side)
+            setTimeoutPopup(false)
+          }}
+          onClose={() => setTimeoutPopup(false)}
+        />
+      )}
+
+      {challengeStep === 'pick-side' && (
+        <SidePickerPopup
+          title="تحدي (VAR) — لأي فريق؟"
+          ownName={ownName}
+          opponentName={opponentName}
+          onPick={(side) => setChallengeStep(side)}
+          onClose={() => setChallengeStep(null)}
+        />
+      )}
+
+      {(challengeStep === 'A' || challengeStep === 'B') && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/60" onClick={() => setChallengeStep(null)}>
+          <div onClick={(e) => e.stopPropagation()} className="bg-s1 border border-bd rounded-2xl p-4 w-72">
+            <div className="text-[13px] font-extrabold text-center mb-3">
+              نتيجة تحدي {challengeStep === 'A' ? ownName : opponentName}؟
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  logChallenge(matchId, challengeStep, 'won')
+                  setChallengeStep(null)
+                }}
+                className="flex-1 py-3 bg-ok text-white rounded-xl font-extrabold text-[13px]"
+              >
+                نجح ✅
+              </button>
+              <button
+                onClick={() => {
+                  logChallenge(matchId, challengeStep, 'lost')
+                  setChallengeStep(null)
+                }}
+                className="flex-1 py-3 bg-err text-white rounded-xl font-extrabold text-[13px]"
+              >
+                فشل ❌
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {serverPopup && (
+        <SidePickerPopup
+          title="من يبدأ بالإرسال بهذا الشوط؟"
+          ownName={ownName}
+          opponentName={opponentName}
+          onPick={(side) => {
+            setServingSide(matchId, set, side)
+            setServerPopup(false)
+          }}
+          onClose={() => setServerPopup(false)}
+        />
+      )}
+
+      {subModalSide && (
+        <SubstitutionModal
+          side={subModalSide}
+          ownName={ownName}
+          opponentName={opponentName}
+          rotation={rotation(subModalSide)}
+          players={playersBySide(subModalSide)}
+          benchPlayers={benchPlayers(subModalSide)}
+          onSubstitute={(position, incomingPlayerId) =>
+            substitutePlayer(matchId, subModalSide, set, position as RotationPosition, incomingPlayerId)
+          }
+          onSwitchSide={opponentTrackingEnabled ? () => setSubModalSide(subModalSide === 'A' ? 'B' : 'A') : undefined}
+          onClose={() => setSubModalSide(null)}
+        />
+      )}
+
+      <EventUndoBar matchId={matchId} ownName={ownName} opponentName={opponentName} />
+    </div>
+  )
+}
+
+interface SidePickerPopupProps {
+  title: string
+  ownName: string
+  opponentName: string
+  onPick: (side: TeamSide) => void
+  onClose: () => void
+}
+
+function SidePickerPopup({ title, ownName, opponentName, onPick, onClose }: SidePickerPopupProps) {
+  return (
+    <div className="fixed inset-0 z-[150] flex items-center justify-center bg-black/60" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="bg-s1 border border-bd rounded-2xl p-4 w-72">
+        <div className="text-[13px] font-extrabold text-center mb-3">{title}</div>
+        <div className="flex gap-2">
+          <button onClick={() => onPick('A')} className="flex-1 py-3 bg-pri text-white rounded-xl font-extrabold text-[13px]">
+            {ownName}
+          </button>
+          <button onClick={() => onPick('B')} className="flex-1 py-3 bg-err text-white rounded-xl font-extrabold text-[13px]">
+            {opponentName}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
