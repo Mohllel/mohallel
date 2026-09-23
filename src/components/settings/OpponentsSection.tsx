@@ -17,19 +17,19 @@ export function OpponentsSection() {
       {clubs.length === 0 ? (
         <p className="text-[12px] text-t3">لا توجد أندية مسجَّلة بعد.</p>
       ) : (
-        <div className="grid grid-cols-2 gap-2 mb-3">
+        <div className="grid grid-cols-3 gap-1.5 mb-3">
           {clubs.map((club) => (
             <button
               key={club.id}
               onClick={() => setSelected(selected === club.id ? null : club.id)}
-              className={`flex items-center gap-2 border rounded-lg px-3 py-2.5 ${
+              className={`flex items-center gap-1.5 border rounded-lg px-2 py-2 ${
                 selected === club.id ? 'bg-pri/10 border-pri' : 'bg-bg border-bd'
               }`}
             >
-              <div className="w-8 h-8 shrink-0 rounded-full bg-s2 border border-bl overflow-hidden flex items-center justify-center text-pri font-black text-[13px]">
+              <div className="w-6 h-6 shrink-0 rounded-full bg-s2 border border-bl overflow-hidden flex items-center justify-center text-pri font-black text-[10px]">
                 {club.logo ? <img src={club.logo} alt="" className="w-full h-full object-cover" /> : '🆚'}
               </div>
-              <span className="text-[12px] font-bold text-right leading-tight line-clamp-2">{club.name}</span>
+              <span className="text-[10px] font-bold text-right leading-tight line-clamp-2">{club.name}</span>
             </button>
           ))}
         </div>
