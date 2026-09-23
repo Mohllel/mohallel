@@ -20,10 +20,16 @@ interface AuthState {
   activeClubId: string | null
   /** الأندية التي دُعي إليها المستخدم الحالي كعضو (غير نادي نفسه) */
   memberships: Membership[]
+  /** true فقط بين لحظة فتح رابط استعادة كلمة المرور المُرسَل بالبريد وحتى تعيين كلمة مرور جديدة */
+  isPasswordRecovery: boolean
   setActiveClubId: (id: string) => void
   signUp: (email: string, password: string) => Promise<string | null>
   signIn: (email: string, password: string) => Promise<string | null>
   signOut: () => Promise<void>
+  /** يرسل رابط استعادة كلمة المرور لهذا البريد إن كان مسجَّلاً — لا يكشف عبر رسالة الخطأ إن كان البريد موجوداً أصلاً */
+  resetPasswordForEmail: (email: string) => Promise<string | null>
+  /** يُستخدم فقط أثناء isPasswordRecovery لتعيين كلمة مرور جديدة بعد فتح رابط الاستعادة */
+  updatePassword: (newPassword: string) => Promise<string | null>
 }
 
 export const useAuthStore = create<AuthState>()(() => ({
@@ -34,6 +40,7 @@ export const useAuthStore = create<AuthState>()(() => ({
   adminChecked: false,
   activeClubId: null,
   memberships: [],
+  isPasswordRecovery: false,
 
   setActiveClubId: (id) => useAuthStore.setState({ activeClubId: id }),
 
@@ -49,6 +56,17 @@ export const useAuthStore = create<AuthState>()(() => ({
   },
   signOut: async () => {
     await supabase?.auth.signOut()
+  },
+  resetPasswordForEmail: async (email) => {
+    if (!supabase) return 'الخدمة السحابية غير مُفعّلة'
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin })
+    return error?.message ?? null
+  },
+  updatePassword: async (newPassword) => {
+    if (!supabase) return 'الخدمة السحابية غير مُفعّلة'
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    if (!error) useAuthStore.setState({ isPasswordRecovery: false })
+    return error?.message ?? null
   },
 }))
 
@@ -87,7 +105,7 @@ if (supabase) {
     refreshAdminStatus(userId)
     refreshMemberships(userId)
   })
-  supabase.auth.onAuthStateChange((_event, session) => {
+  supabase.auth.onAuthStateChange((event, session) => {
     const userId = session?.user?.id
     useAuthStore.setState({
       session,
@@ -96,6 +114,12 @@ if (supabase) {
       activeClubId: userId ?? null,
       memberships: [],
       adminChecked: false,
+      isPasswordRecovery:
+        event === 'PASSWORD_RECOVERY'
+          ? true
+          : event === 'SIGNED_OUT' || event === 'SIGNED_IN'
+            ? false
+            : useAuthStore.getState().isPasswordRecovery,
     })
     refreshAdminStatus(userId)
     refreshMemberships(userId)
