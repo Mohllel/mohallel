@@ -11,14 +11,40 @@ export function ResultsScreen() {
   const { clubName } = useClubStore()
   const { competitions } = useReferenceDataStore()
 
-  const finished = Object.values(matches)
-    .filter((m) => m.status === 'finished')
-    .sort((a, b) => b.createdAt - a.createdAt)
+  const all = Object.values(matches).filter((m) => m.status !== 'scheduled')
+  const live = all.filter((m) => m.status === 'live').sort((a, b) => b.createdAt - a.createdAt)
+  const finished = all.filter((m) => m.status === 'finished').sort((a, b) => b.createdAt - a.createdAt)
 
   return (
     <div className="p-4 animate-[fadeIn_.3s_ease]">
-      <h2 className="text-[18px] font-black mb-3">📋 المباريات المنتهية</h2>
+      <h2 className="text-[18px] font-black mb-3">📋 المباريات</h2>
 
+      {live.length > 0 && (
+        <>
+          <div className="text-[12px] font-extrabold text-t2 mb-2">جارية</div>
+          {live.map((m) => (
+            <Link
+              key={m.id}
+              to={`/match/${m.id}/live`}
+              className="flex items-center gap-3 bg-s1 border border-warn/40 rounded-2xl p-3 mb-2"
+            >
+              <span className="w-1.5 self-stretch rounded-full bg-warn" />
+              <div className="flex-1">
+                <div className="text-[13px] font-extrabold">
+                  {clubName || 'فريقك'} <span className="text-t3 font-normal">vs</span> {m.opponentName}
+                </div>
+                <MatchMeta match={m} competitions={competitions} />
+              </div>
+              <span className="text-[15px] font-black">
+                {countSetWins(m.setWinners, 'A')}:{countSetWins(m.setWinners, 'B')}
+              </span>
+              <span className="text-[10px] font-extrabold text-warn">▶ متابعة</span>
+            </Link>
+          ))}
+        </>
+      )}
+
+      <div className="text-[12px] font-extrabold text-t2 mb-2 mt-1">المنتهية</div>
       {finished.length === 0 && <p className="text-center text-t3 text-[13px] mt-6">لا توجد مباريات منتهية بعد.</p>}
 
       {finished.map((m) => {
