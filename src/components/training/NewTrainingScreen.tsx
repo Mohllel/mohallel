@@ -4,6 +4,7 @@ import { useClubStore } from '../../store/useClubStore'
 import { useTrainingStore } from '../../store/useTrainingStore'
 import { Avatar } from '../shared/Avatar'
 import { BackButton } from '../shared/BackButton'
+import { TrainingTemplateChips } from './TrainingTemplateChips'
 
 export function NewTrainingScreen() {
   const navigate = useNavigate()
@@ -40,6 +41,7 @@ export function NewTrainingScreen() {
 
       <div className="bg-s1 border border-bd rounded-2xl p-4 mb-3">
         <label className="block text-[11px] text-t2 mb-1 font-bold">عنوان التمرين</label>
+        <TrainingTemplateChips onPick={setTitle} />
         <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="مثال: تمرين استقبال" className="mb-3" />
         <label className="block text-[11px] text-t2 mb-1 font-bold">التاريخ</label>
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />

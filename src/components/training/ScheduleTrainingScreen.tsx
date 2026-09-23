@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useClubStore } from '../../store/useClubStore'
 import { useTrainingStore } from '../../store/useTrainingStore'
+import { generateRecurringDates, WEEKDAYS } from '../../lib/recurringSchedule'
 import { Avatar } from '../shared/Avatar'
 import { BackButton } from '../shared/BackButton'
+import { TrainingTemplateChips } from './TrainingTemplateChips'
 
 export function ScheduleTrainingScreen() {
   const navigate = useNavigate()
@@ -13,6 +15,9 @@ export function ScheduleTrainingScreen() {
   const [title, setTitle] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [selected, setSelected] = useState<Set<string>>(new Set(players.map((p) => p.id)))
+  const [recurring, setRecurring] = useState(false)
+  const [weekdays, setWeekdays] = useState<Set<number>>(new Set([new Date().getDay()]))
+  const [weeks, setWeeks] = useState(4)
 
   const toggle = (id: string) => {
     setSelected((prev) => {
@@ -23,11 +28,24 @@ export function ScheduleTrainingScreen() {
     })
   }
 
-  const canSchedule = title.trim().length > 0 && selected.size >= 1
+  const toggleWeekday = (v: number) => {
+    setWeekdays((prev) => {
+      const next = new Set(prev)
+      if (next.has(v)) next.delete(v)
+      else next.add(v)
+      return next
+    })
+  }
+
+  const dates = recurring ? generateRecurringDates(date, Array.from(weekdays), weeks) : [date]
+  const canSchedule = title.trim().length > 0 && selected.size >= 1 && dates.length >= 1
 
   const handleSchedule = () => {
     if (!canSchedule) return
-    createScheduledSession(title.trim(), date, Array.from(selected))
+    const playerIds = Array.from(selected)
+    for (const d of dates) {
+      createScheduledSession(title.trim(), d, playerIds)
+    }
     navigate('/training')
   }
 
@@ -40,9 +58,58 @@ export function ScheduleTrainingScreen() {
 
       <div className="bg-s1 border border-bd rounded-2xl p-4 mb-3">
         <label className="block text-[11px] text-t2 mb-1 font-bold">عنوان التمرين</label>
+        <TrainingTemplateChips onPick={setTitle} />
         <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="مثال: تمرين استقبال" className="mb-3" />
-        <label className="block text-[11px] text-t2 mb-1 font-bold">التاريخ</label>
+        <label className="block text-[11px] text-t2 mb-1 font-bold">
+          {recurring ? 'تاريخ البداية' : 'التاريخ'}
+        </label>
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+      </div>
+
+      <div className="bg-s1 border border-bd rounded-2xl p-4 mb-3">
+        <label className="flex items-center justify-between cursor-pointer">
+          <span className="text-[14px] font-extrabold">🔁 تكرار أسبوعي</span>
+          <input
+            type="checkbox"
+            checked={recurring}
+            onChange={(e) => setRecurring(e.target.checked)}
+            className="w-5 h-5"
+          />
+        </label>
+
+        {recurring && (
+          <div className="mt-3">
+            <label className="block text-[11px] text-t2 mb-1.5 font-bold">أيام التكرار</label>
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {WEEKDAYS.map((w) => (
+                <button
+                  key={w.value}
+                  type="button"
+                  onClick={() => toggleWeekday(w.value)}
+                  className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold border ${
+                    weekdays.has(w.value) ? 'bg-pri text-white border-pri' : 'bg-bg border-bd text-t2'
+                  }`}
+                >
+                  {w.label}
+                </button>
+              ))}
+            </div>
+            <label className="block text-[11px] text-t2 mb-1 font-bold">لعدد أسابيع</label>
+            <input
+              type="number"
+              min={1}
+              max={12}
+              value={weeks}
+              onChange={(e) => setWeeks(Math.min(12, Math.max(1, Number(e.target.value) || 1)))}
+              className="w-20 text-center"
+            />
+            <p className="text-[10px] text-t3 mt-2">
+              {weekdays.size === 0
+                ? 'اختر يوماً واحداً على الأقل.'
+                : `سيُنشأ ${dates.length} تمريناً مجدولاً من ${date} حتى ${dates[dates.length - 1] ?? date}.`}
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="bg-s1 border border-bd rounded-2xl p-4 mb-3">
@@ -66,7 +133,7 @@ export function ScheduleTrainingScreen() {
         disabled={!canSchedule}
         className="block w-full py-4 bg-gradient-to-br from-ok to-[#059669] text-white rounded-2xl text-[17px] font-black mt-2 disabled:opacity-40"
       >
-        🗓 جدولة التمرين
+        {recurring && dates.length > 1 ? `🗓 جدولة ${dates.length} تمارين` : '🗓 جدولة التمرين'}
       </button>
     </div>
   )

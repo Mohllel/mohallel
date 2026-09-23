@@ -26,6 +26,14 @@ export function TrainingListScreen() {
         </Link>
       </div>
 
+      <Link
+        to="/training/progress"
+        className="flex items-center justify-between bg-s1 border border-bd rounded-2xl p-3 mb-4 font-extrabold text-[13px]"
+      >
+        📈 تقدّم الأداء — تدريب مقابل مباراة
+        <span className="text-t3">←</span>
+      </Link>
+
       {scheduled.length > 0 && (
         <>
           <div className="text-[12px] font-extrabold text-t2 mb-2">المجدولة</div>
