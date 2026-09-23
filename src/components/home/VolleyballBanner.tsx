@@ -36,15 +36,17 @@ export function VolleyballBanner() {
         />
       ))}
 
-      {/* الكرة */}
-      <g transform="translate(430,95)">
-        <circle r="62" fill="#ffffff" opacity="0.97" />
-        <circle r="62" fill="none" stroke="#1e3a8a" strokeOpacity="0.15" strokeWidth="2" />
-        <path d="M-44,-30 Q0,-58 44,-30" fill="none" stroke="#2563eb" strokeWidth="4" opacity="0.85" />
-        <path d="M-44,30 Q0,58 44,30" fill="none" stroke="#2563eb" strokeWidth="4" opacity="0.85" />
-        <path d="M-58,-6 Q-20,0 -58,10" fill="none" stroke="#f97316" strokeWidth="4" opacity="0.9" />
-        <path d="M58,-6 Q20,0 58,10" fill="none" stroke="#f97316" strokeWidth="4" opacity="0.9" />
-        <circle r="62" fill="none" stroke="#1e3a8a" strokeWidth="1.5" opacity="0.2" />
+      {/* الكرة — حركة تعويم خفيفة ومستمرة */}
+      <g style={{ animation: 'floatBall 3.2s ease-in-out infinite' }}>
+        <g transform="translate(430,95)">
+          <circle r="62" fill="#ffffff" opacity="0.97" />
+          <circle r="62" fill="none" stroke="#1e3a8a" strokeOpacity="0.15" strokeWidth="2" />
+          <path d="M-44,-30 Q0,-58 44,-30" fill="none" stroke="#2563eb" strokeWidth="4" opacity="0.85" />
+          <path d="M-44,30 Q0,58 44,30" fill="none" stroke="#2563eb" strokeWidth="4" opacity="0.85" />
+          <path d="M-58,-6 Q-20,0 -58,10" fill="none" stroke="#f97316" strokeWidth="4" opacity="0.9" />
+          <path d="M58,-6 Q20,0 58,10" fill="none" stroke="#f97316" strokeWidth="4" opacity="0.9" />
+          <circle r="62" fill="none" stroke="#1e3a8a" strokeWidth="1.5" opacity="0.2" />
+        </g>
       </g>
 
       {/* خطوط حركة */}

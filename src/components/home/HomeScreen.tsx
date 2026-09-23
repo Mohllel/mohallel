@@ -3,6 +3,8 @@ import { Logo } from '../brand/Logo'
 import { useClubStore } from '../../store/useClubStore'
 import { useMatchesStore } from '../../store/useMatchesStore'
 import { getNextMatch } from '../../lib/schedule'
+import { isMatchDecided } from '../../lib/scoring'
+import { HomeStats } from './HomeStats'
 import { VolleyballBanner } from './VolleyballBanner'
 
 const ACTIONS = [
@@ -13,21 +15,30 @@ const ACTIONS = [
 ]
 
 export function HomeScreen() {
-  const { clubName, headerImage } = useClubStore()
+  const { clubName, headerImage, players } = useClubStore()
   const matches = useMatchesStore((s) => s.matches)
   const nextMatch = getNextMatch(matches)
 
+  const finishedMatches = Object.values(matches).filter((m) => m.status === 'finished')
+  const wins = finishedMatches.filter((m) => isMatchDecided(m.setWinners) === 'A').length
+  const winRate = finishedMatches.length ? Math.round((wins / finishedMatches.length) * 100) : 0
+
   return (
-    <div className="p-4 animate-[fadeIn_.3s_ease]">
+    <div className="p-4">
       <div className="-mx-4 -mt-4 mb-4 h-40 overflow-hidden">
         {headerImage ? (
-          <img src={headerImage} alt="" className="w-full h-full object-cover" />
+          <img
+            key={headerImage}
+            src={headerImage}
+            alt=""
+            className="w-full h-full object-cover animate-[coverZoom_1s_ease-out_both]"
+          />
         ) : (
           <VolleyballBanner />
         )}
       </div>
 
-      <div className="text-center pb-6">
+      <div className="text-center pb-5 animate-[fadeIn_.5s_ease_both]">
         <div className="mx-auto mb-3 w-16 h-16">
           <Logo size={64} />
         </div>
@@ -39,10 +50,13 @@ export function HomeScreen() {
         </p>
       </div>
 
+      <HomeStats matchesPlayed={finishedMatches.length} winRate={winRate} playersCount={players.length} />
+
       {nextMatch && (
         <Link
           to={`/match/${nextMatch.id}/start`}
-          className="flex items-center gap-3 bg-s1 border border-sec/40 rounded-2xl p-3 mb-4"
+          className="flex items-center gap-3 bg-s1 border border-sec/40 rounded-2xl p-3 mb-4 animate-[fadeIn_.5s_ease_both]"
+          style={{ animationDelay: '270ms' }}
         >
           <div className="w-11 h-11 rounded-xl bg-s2 border border-bl overflow-hidden flex items-center justify-center text-pri font-black shrink-0">
             {nextMatch.opponentLogo ? (
@@ -67,14 +81,16 @@ export function HomeScreen() {
       <div className="grid grid-cols-2 gap-2.5 mb-2.5">
         <Link
           to="/match/new"
-          className="flex flex-col items-center justify-center gap-1.5 rounded-2xl py-6 border border-transparent bg-gradient-to-br from-ok to-[#059669] text-white shadow-[0_6px_20px_rgba(16,185,129,0.25)]"
+          className="flex flex-col items-center justify-center gap-1.5 rounded-2xl py-6 border border-transparent bg-gradient-to-br from-ok to-[#059669] text-white shadow-[0_6px_20px_rgba(16,185,129,0.25)] animate-[fadeIn_.5s_ease_both]"
+          style={{ animationDelay: '340ms' }}
         >
           <span className="text-2xl">▶</span>
           <span className="text-[13px] font-extrabold">مباراة جديدة</span>
         </Link>
         <Link
           to="/training"
-          className="flex flex-col items-center justify-center gap-1.5 rounded-2xl py-6 border border-transparent bg-gradient-to-br from-err to-[#b91c1c] text-white shadow-[0_6px_20px_rgba(239,68,68,0.25)]"
+          className="flex flex-col items-center justify-center gap-1.5 rounded-2xl py-6 border border-transparent bg-gradient-to-br from-err to-[#b91c1c] text-white shadow-[0_6px_20px_rgba(239,68,68,0.25)] animate-[fadeIn_.5s_ease_both]"
+          style={{ animationDelay: '400ms' }}
         >
           <span className="text-2xl">🏋️</span>
           <span className="text-[13px] font-extrabold">تدريب</span>
@@ -82,11 +98,12 @@ export function HomeScreen() {
       </div>
 
       <div className="grid grid-cols-2 gap-2.5">
-        {ACTIONS.map((a) => (
+        {ACTIONS.map((a, i) => (
           <Link
             key={a.to}
             to={a.to}
-            className="flex flex-col items-center justify-center gap-1.5 rounded-2xl py-6 border bg-s1 border-bd text-t1"
+            className="flex flex-col items-center justify-center gap-1.5 rounded-2xl py-6 border bg-s1 border-bd text-t1 animate-[fadeIn_.5s_ease_both]"
+            style={{ animationDelay: `${460 + i * 60}ms` }}
           >
             <span className="text-2xl">{a.icon}</span>
             <span className="text-[13px] font-extrabold">{a.label}</span>
