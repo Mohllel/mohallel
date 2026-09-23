@@ -13,6 +13,7 @@ import { useFeatureFlagsStore } from '../../store/useFeatureFlagsStore'
 import { installErrorReporting } from '../../lib/errorReporting'
 import { Logo } from '../brand/Logo'
 import { LoginScreen } from './LoginScreen'
+import { ResetPasswordScreen } from './ResetPasswordScreen'
 
 function Splash() {
   return (
@@ -37,7 +38,7 @@ function MaintenanceScreen() {
 }
 
 export function AuthGate({ children }: { children: ReactNode }) {
-  const { session, user, loading, isAdmin, activeClubId } = useAuthStore()
+  const { session, user, loading, isAdmin, activeClubId, isPasswordRecovery } = useAuthStore()
   const [dataReady, setDataReady] = useState(false)
   const [settings, setSettings] = useState<AppSettings | null>(null)
 
@@ -78,6 +79,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
   }, [activeClubId])
 
   if (loading) return <Splash />
+  if (isPasswordRecovery) return <ResetPasswordScreen />
   if (!session) return <LoginScreen />
   if (!dataReady) return <Splash />
   if (settings?.maintenance_mode && !isAdmin) return <MaintenanceScreen />
