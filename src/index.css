@@ -64,6 +64,21 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* تأثير مرور الماوس (hover) على الأزرار وروابط التنقّل — يُستثنى اللمس عبر (pointer: fine)
+   حتى لا يبقى "عالقاً" على الآيباد/الجوال بعد النقر */
+@media (hover: hover) and (pointer: fine) {
+  button:not(:disabled),
+  a {
+    transition: filter 0.15s ease;
+  }
+
+  button:not(:disabled):hover,
+  a:hover {
+    filter: brightness(0.93);
+    cursor: pointer;
+  }
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
