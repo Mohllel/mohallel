@@ -23,6 +23,8 @@ interface TrainingActions {
   /** يحوّل تمريناً مجدولاً إلى "منتهٍ" بعد تسجيل من حضر فعلياً من المدعوّين */
   startScheduledSession: (id: string, attendedPlayerIds: string[]) => void
   deleteSession: (id: string) => void
+  /** يمسح كل جلسات التدريب نهائياً — جزء من "إعادة التعيين" بالإعدادات */
+  clearAllSessions: () => void
   addRep: (sessionId: string, input: AddRepInput) => void
   undoLastRep: (sessionId: string) => void
   lastRepId: (sessionId: string) => string | null
@@ -80,6 +82,7 @@ export const useTrainingStore = create<Store>()(
           delete next[id]
           return { sessions: next }
         }),
+      clearAllSessions: () => set({ sessions: {}, _undoIds: {} }),
       addRep: (sessionId, input) => {
         set((st) => {
           const session = st.sessions[sessionId]

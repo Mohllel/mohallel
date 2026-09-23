@@ -38,6 +38,9 @@ interface ClubActions {
   /** presetId هنا معرّف نادٍ مرجعي عام (من reference_clubs) — روستر المنافس يبقى بيانات خاصة بحساب هذا النادي فقط */
   addOpponentPlayer: (presetId: string, name: string, number?: number) => string
   removeOpponentPlayer: (presetId: string, playerId: string) => void
+
+  /** يعيد ملف النادي (الاسم، الشعار، الألوان، اللاعبون...) لحالته الابتدائية — جزء من "إعادة التعيين" بالإعدادات */
+  resetClub: () => void
 }
 
 type Store = ClubProfile & ClubActions
@@ -107,6 +110,8 @@ export const useClubStore = create<Store>()(
             opponentRosters: { ...st.opponentRosters, [presetId]: roster.filter((p) => p.id !== playerId) },
           }
         }),
+
+      resetClub: () => set({ ...initialState }),
     }),
     {
       name: 'mohallel-club',
