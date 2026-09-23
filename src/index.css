@@ -12,6 +12,8 @@
   font-weight: 400;
   font-style: normal;
   font-display: swap;
+  /** يرفع الحجم الظاهري للخط (يبدو أصغر من Tajawal بنفس القياس) بلا حاجة لتعديل كل نص بكل صفحة */
+  size-adjust: 118%;
 }
 
 @theme {
