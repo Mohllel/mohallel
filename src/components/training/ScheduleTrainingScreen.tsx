@@ -3,16 +3,17 @@ import { useNavigate } from 'react-router-dom'
 import { useClubStore } from '../../store/useClubStore'
 import { useTrainingStore } from '../../store/useTrainingStore'
 import { generateRecurringDates, WEEKDAYS } from '../../lib/recurringSchedule'
+import type { SkillKey } from '../../types/domain'
 import { Avatar } from '../shared/Avatar'
 import { BackButton } from '../shared/BackButton'
-import { TrainingTemplateChips } from './TrainingTemplateChips'
+import { SkillPicker } from './SkillPicker'
 
 export function ScheduleTrainingScreen() {
   const navigate = useNavigate()
   const { players } = useClubStore()
   const { createScheduledSession } = useTrainingStore()
 
-  const [title, setTitle] = useState('')
+  const [skill, setSkill] = useState<SkillKey | null>(null)
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [selected, setSelected] = useState<Set<string>>(new Set(players.map((p) => p.id)))
   const [recurring, setRecurring] = useState(false)
@@ -38,13 +39,13 @@ export function ScheduleTrainingScreen() {
   }
 
   const dates = recurring ? generateRecurringDates(date, Array.from(weekdays), weeks) : [date]
-  const canSchedule = title.trim().length > 0 && selected.size >= 1 && dates.length >= 1
+  const canSchedule = skill !== null && selected.size >= 1 && dates.length >= 1
 
   const handleSchedule = () => {
-    if (!canSchedule) return
+    if (!skill || !canSchedule) return
     const playerIds = Array.from(selected)
     for (const d of dates) {
-      createScheduledSession(title.trim(), d, playerIds)
+      createScheduledSession(skill, d, playerIds)
     }
     navigate('/training')
   }
@@ -57,10 +58,9 @@ export function ScheduleTrainingScreen() {
       </div>
 
       <div className="bg-s1 border border-bd rounded-2xl p-4 mb-3">
-        <label className="block text-[11px] text-t2 mb-1 font-bold">عنوان التمرين</label>
-        <TrainingTemplateChips onPick={setTitle} />
-        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="مثال: تمرين استقبال" className="mb-3" />
-        <label className="block text-[11px] text-t2 mb-1 font-bold">
+        <label className="block text-[11px] text-t2 mb-1.5 font-bold">اختر المهارة</label>
+        <SkillPicker value={skill} onChange={setSkill} />
+        <label className="block text-[11px] text-t2 mb-1 mt-3 font-bold">
           {recurring ? 'تاريخ البداية' : 'التاريخ'}
         </label>
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />

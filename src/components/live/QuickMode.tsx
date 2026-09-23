@@ -1,6 +1,6 @@
 import { useRef } from 'react'
 import { SKILLS } from '../../constants/skills'
-import { DEFAULT_QUICK_QUALITY } from '../../constants/quality'
+import { DEFAULT_QUICK_QUALITY, qualityByValue } from '../../constants/quality'
 import { useMatchesStore } from '../../store/useMatchesStore'
 import { useMatchPlayers } from '../../lib/useMatchPlayers'
 import { cellCount, playerTotalInSet, skillTotal } from '../../lib/stats'
@@ -53,7 +53,7 @@ export function QuickMode({ matchId, paused, onRequestQuality }: QuickModeProps)
         </div>
       )}
       <div className="text-center text-[11px] text-t3 bg-s1 mx-2 mb-1 rounded-[10px] border border-bd py-1.5">
-        النقر يسجّل <strong className="text-ok">جيد (+)</strong> مباشرة — اضغط مطوّلاً لتغيير التقييم
+        النقر يسجّل <strong className="text-ok">{qualityByValue(DEFAULT_QUICK_QUALITY).l} ({qualityByValue(DEFAULT_QUICK_QUALITY).s})</strong> مباشرة — اضغط مطوّلاً لتغيير التقييم
       </div>
       <SkillLegend />
       <div className="p-2 pt-0 overflow-x-auto">

@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 import { supabaseStorage } from '../lib/supabaseStorage'
+import { skillByKey } from '../constants/skills'
 import type { Quality, SkillKey, TrainingSession } from '../types/domain'
 
 const uid = () => Math.random().toString(36).slice(2, 11)
@@ -17,9 +18,10 @@ interface TrainingState {
 }
 
 interface TrainingActions {
-  createSession: (title: string, date: string, playerIds: string[]) => string
+  /** كل تمرين يركّز على مهارة واحدة فقط — العنوان يُشتَق تلقائياً من اسم المهارة */
+  createSession: (skill: SkillKey, date: string, playerIds: string[]) => string
   /** يجدول تمريناً بتاريخ مقبل بلا حضور مسجَّل بعد — يظهر بالتمارين المجدولة */
-  createScheduledSession: (title: string, date: string, playerIds: string[]) => string
+  createScheduledSession: (skill: SkillKey, date: string, playerIds: string[]) => string
   /** يحوّل تمريناً مجدولاً إلى "منتهٍ" بعد تسجيل من حضر فعلياً من المدعوّين */
   startScheduledSession: (id: string, attendedPlayerIds: string[]) => void
   deleteSession: (id: string) => void
@@ -40,13 +42,14 @@ export const useTrainingStore = create<Store>()(
       sessions: {},
       _undoIds: {},
 
-      createSession: (title, date, playerIds) => {
+      createSession: (skill, date, playerIds) => {
         const id = uid()
         const session: TrainingSession = {
           id,
           createdAt: Date.now(),
           date,
-          title,
+          title: `تمرين ${skillByKey(skill).l}`,
+          skill,
           playerIds,
           status: 'done',
           attendedPlayerIds: playerIds,
@@ -55,13 +58,14 @@ export const useTrainingStore = create<Store>()(
         set((st) => ({ sessions: { ...st.sessions, [id]: session } }))
         return id
       },
-      createScheduledSession: (title, date, playerIds) => {
+      createScheduledSession: (skill, date, playerIds) => {
         const id = uid()
         const session: TrainingSession = {
           id,
           createdAt: Date.now(),
           date,
-          title,
+          title: `تمرين ${skillByKey(skill).l}`,
+          skill,
           playerIds,
           status: 'scheduled',
           attendedPlayerIds: [],
