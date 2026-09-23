@@ -6,6 +6,7 @@ import { HeaderImageUpload } from '../shared/HeaderImageUpload'
 import { OpponentsSection } from './OpponentsSection'
 import { RosterSection } from './RosterSection'
 import { CollaborationSection } from './CollaborationSection'
+import { DangerZoneSection } from './DangerZoneSection'
 
 export function SettingsScreen() {
   const {
@@ -112,6 +113,8 @@ export function SettingsScreen() {
           تسجيل الخروج
         </button>
       </div>
+
+      <DangerZoneSection />
     </div>
   )
 }

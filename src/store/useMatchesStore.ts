@@ -89,6 +89,8 @@ interface MatchesActions {
   startScheduledMatch: (id: string, playerIds: string[]) => void
   deleteMatch: (id: string) => void
   finishMatch: (id: string) => void
+  /** يمسح كل المباريات نهائياً — جزء من "إعادة التعيين" بالإعدادات */
+  clearAllMatches: () => void
 
   setMode: (matchId: string, mode: LiveMode) => void
   setSet: (matchId: string, n: number) => void
@@ -195,6 +197,7 @@ export const useMatchesStore = create<Store>()(
           if (!match) return st
           return { matches: { ...st.matches, [id]: { ...match, status: 'finished' } } }
         }),
+      clearAllMatches: () => set({ matches: {}, _undoIds: {}, _undoEventIds: {} }),
 
       setMode: (matchId, mode) =>
         set((st) => {
