@@ -1,23 +1,17 @@
 @import "tailwindcss";
+@import "@fontsource/cairo/400.css";
+@import "@fontsource/cairo/500.css";
+@import "@fontsource/cairo/700.css";
+@import "@fontsource/cairo/800.css";
+@import "@fontsource/cairo/900.css";
 @import "@fontsource/tajawal/400.css";
 @import "@fontsource/tajawal/500.css";
 @import "@fontsource/tajawal/700.css";
 @import "@fontsource/tajawal/800.css";
 @import "@fontsource/tajawal/900.css";
 
-/* الخط الرئيسي المخصص — Tajawal يبقى كاحتياط لأوزان/رموز غير متوفرة بخط مسجل (متوفر بوزن Regular فقط) */
-@font-face {
-  font-family: "Msajel";
-  src: url("./assets/fonts/MSAJEL-Regular.ttf") format("truetype");
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-  /** يرفع الحجم الظاهري للخط (يبدو أصغر من Tajawal بنفس القياس) بلا حاجة لتعديل كل نص بكل صفحة */
-  size-adjust: 118%;
-}
-
 @theme {
-  --font-sans: "Msajel", "Tajawal", sans-serif;
+  --font-sans: "Cairo", "Tajawal", sans-serif;
 
   /* Brand identity */
   --color-pri: #2563eb;
