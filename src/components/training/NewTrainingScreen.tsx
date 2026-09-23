@@ -2,16 +2,17 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useClubStore } from '../../store/useClubStore'
 import { useTrainingStore } from '../../store/useTrainingStore'
+import type { SkillKey } from '../../types/domain'
 import { Avatar } from '../shared/Avatar'
 import { BackButton } from '../shared/BackButton'
-import { TrainingTemplateChips } from './TrainingTemplateChips'
+import { SkillPicker } from './SkillPicker'
 
 export function NewTrainingScreen() {
   const navigate = useNavigate()
   const { players } = useClubStore()
   const { createSession } = useTrainingStore()
 
-  const [title, setTitle] = useState('')
+  const [skill, setSkill] = useState<SkillKey | null>(null)
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [selected, setSelected] = useState<Set<string>>(new Set(players.map((p) => p.id)))
 
@@ -24,11 +25,11 @@ export function NewTrainingScreen() {
     })
   }
 
-  const canStart = title.trim().length > 0 && selected.size >= 1
+  const canStart = skill !== null && selected.size >= 1
 
   const handleStart = () => {
-    if (!canStart) return
-    const id = createSession(title.trim(), date, Array.from(selected))
+    if (!skill || !canStart) return
+    const id = createSession(skill, date, Array.from(selected))
     navigate(`/training/${id}`)
   }
 
@@ -40,10 +41,9 @@ export function NewTrainingScreen() {
       </div>
 
       <div className="bg-s1 border border-bd rounded-2xl p-4 mb-3">
-        <label className="block text-[11px] text-t2 mb-1 font-bold">عنوان التمرين</label>
-        <TrainingTemplateChips onPick={setTitle} />
-        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="مثال: تمرين استقبال" className="mb-3" />
-        <label className="block text-[11px] text-t2 mb-1 font-bold">التاريخ</label>
+        <label className="block text-[11px] text-t2 mb-1.5 font-bold">اختر المهارة</label>
+        <SkillPicker value={skill} onChange={setSkill} />
+        <label className="block text-[11px] text-t2 mb-1 mt-3 font-bold">التاريخ</label>
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
       </div>
 
