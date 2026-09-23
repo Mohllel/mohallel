@@ -51,16 +51,23 @@ export function NewTrainingScreen() {
         <div className="text-[14px] font-extrabold mb-3">
           👥 المشاركون ({selected.size}/{players.length})
         </div>
-        {players.map((p) => (
-          <label
-            key={p.id}
-            className="flex items-center gap-2.5 bg-bg border border-bd rounded-xl px-2.5 py-2 mb-1.5 cursor-pointer"
-          >
-            <input type="checkbox" checked={selected.has(p.id)} onChange={() => toggle(p.id)} className="w-4 h-4" />
-            <Avatar name={p.name} photo={p.photo} size={28} />
-            <span className="flex-1 text-[13px] font-bold">{p.name}</span>
-          </label>
-        ))}
+        <div className="grid grid-cols-3 gap-2">
+          {players.map((p) => {
+            const isSelected = selected.has(p.id)
+            return (
+              <label
+                key={p.id}
+                className={`flex flex-col items-center gap-1.5 border rounded-xl px-2 pt-3 pb-2 cursor-pointer ${
+                  isSelected ? 'bg-pri/10 border-pri' : 'bg-bg border-bd opacity-50'
+                }`}
+              >
+                <input type="checkbox" checked={isSelected} onChange={() => toggle(p.id)} className="hidden" />
+                <Avatar name={p.name} photo={p.photo} size={48} />
+                <span className="text-[11px] font-bold text-center leading-tight line-clamp-2">{p.name}</span>
+              </label>
+            )
+          })}
+        </div>
       </div>
 
       <button
