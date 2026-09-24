@@ -99,6 +99,8 @@ interface MatchesActions {
   addAction: (matchId: string, input: AddActionInput) => void
   undoLastAction: (matchId: string) => void
   lastAction: (matchId: string) => Action | null
+  /** يضيف بيانات تحليل (لاعب/مهارة/تقييم) لنقطة سُجّلت مسبقاً من خريطة الملعب — بلا احتساب نقطة إضافية */
+  tagPointAction: (matchId: string, input: AddActionInput) => void
 
   /** خريطة الملعب: نقطة بمكان سقوط الكرة (بلا مهارة) — landedInSide هو الملعب الذي سقطت فيه الكرة */
   logPointAtZone: (matchId: string, landedInSide: TeamSide, zone: number) => void
@@ -259,6 +261,25 @@ export const useMatchesStore = create<Store>()(
 
           return {
             matches: { ...st.matches, [matchId]: next },
+            _undoIds: { ...st._undoIds, [matchId]: action.id },
+          }
+        })
+        if (undoTimers[matchId]) clearTimeout(undoTimers[matchId])
+        undoTimers[matchId] = setTimeout(() => {
+          set((st) => ({ _undoIds: { ...st._undoIds, [matchId]: null } }))
+        }, 3500)
+      },
+      tagPointAction: (matchId, input) => {
+        set((st) => {
+          const match = st.matches[matchId]
+          if (!match) return st
+          const autoPosition =
+            input.rotationPosition ??
+            match.rotation[input.side]?.[match.set]?.find((slot) => slot.playerId === input.playerId)?.position
+          const action: Action = { id: uid(), set: match.set, ts: Date.now(), ...input, rotationPosition: autoPosition }
+          undoRegistry[matchId] = { actionId: action.id }
+          return {
+            matches: { ...st.matches, [matchId]: { ...match, act: [...match.act, action] } },
             _undoIds: { ...st._undoIds, [matchId]: action.id },
           }
         })
