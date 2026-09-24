@@ -6,6 +6,7 @@ import { AuthGate } from './components/auth/AuthGate'
 import { TabLayout } from './components/layout/TabLayout'
 import { HomeScreen } from './components/home/HomeScreen'
 import { SetupScreen } from './components/setup/SetupScreen'
+import { ScheduleMatchScreen } from './components/setup/ScheduleMatchScreen'
 import { StartScheduledMatchScreen } from './components/setup/StartScheduledMatchScreen'
 import { LiveScreen } from './components/live/LiveScreen'
 import { ReportScreen } from './components/report/ReportScreen'
@@ -71,6 +72,7 @@ function AuthenticatedApp() {
         <Route path="/training" element={<TrainingListScreen />} />
       </Route>
       <Route path="/match/new" element={<SetupScreen />} />
+      <Route path="/match/schedule" element={<ScheduleMatchScreen />} />
       <Route path="/match/:id/start" element={<StartScheduledMatchScreen />} />
       <Route path="/match/:id/live" element={<LiveScreen />} />
       <Route path="/match/:id/report" element={<ReportScreen />} />
