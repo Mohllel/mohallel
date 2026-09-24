@@ -24,14 +24,19 @@ import { PlayerProgressScreen } from './components/training/PlayerProgressScreen
 import { PublicLiveScoreScreen } from './components/live-public/PublicLiveScoreScreen'
 import { AdminScreen } from './components/admin/AdminScreen'
 import { RulesScreen } from './components/rules/RulesScreen'
+import { UpdatePrompt } from './components/shared/UpdatePrompt'
 
 function App() {
   return (
-    <Routes>
-      {/* رابط عام لمتابعة النتيجة لحظياً — بلا تسجيل دخول، يبقى خارج AuthGate عمداً */}
-      <Route path="/live/:matchId" element={<PublicLiveScoreScreen />} />
-      <Route path="*" element={<AuthGate><AuthenticatedApp /></AuthGate>} />
-    </Routes>
+    <>
+      <Routes>
+        {/* رابط عام لمتابعة النتيجة لحظياً — بلا تسجيل دخول، يبقى خارج AuthGate عمداً */}
+        <Route path="/live/:matchId" element={<PublicLiveScoreScreen />} />
+        <Route path="*" element={<AuthGate><AuthenticatedApp /></AuthGate>} />
+      </Routes>
+      {/* خارج المسارات عمداً — يظهر بأي صفحة (حتى شاشة الدخول) فور توفّر نسخة أحدث */}
+      <UpdatePrompt />
+    </>
   )
 }
 
