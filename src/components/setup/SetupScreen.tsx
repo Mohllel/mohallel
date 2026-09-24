@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useClubStore } from '../../store/useClubStore'
 import { useReferenceDataStore } from '../../store/useReferenceDataStore'
 import { useMatchesStore } from '../../store/useMatchesStore'
+import { countSetWins } from '../../lib/scoring'
 import { Logo } from '../brand/Logo'
 import { BackButton } from '../shared/BackButton'
 import type { Match } from '../../types/domain'
@@ -24,6 +25,9 @@ export function SetupScreen() {
     ? opponentPresets.filter((p) => selectedCompetition.eligibleOpponentIds!.includes(p.id))
     : opponentPresets
 
+  const live = Object.values(matches)
+    .filter((m) => m.status === 'live')
+    .sort((a, b) => b.createdAt - a.createdAt)
   const scheduled = Object.values(matches)
     .filter((m) => m.status === 'scheduled')
     .sort((a, b) => a.date.localeCompare(b.date))
@@ -59,11 +63,61 @@ export function SetupScreen() {
         <div className="mx-auto mb-2 w-14 h-14">
           <Logo size={56} />
         </div>
-        <h1 className="text-[20px] font-black">مباراة جديدة</h1>
+        <h1 className="text-[20px] font-black">🏐 المباريات</h1>
       </div>
 
-      <div className="bg-s1 border border-bd rounded-2xl p-4 mb-3">
-        <div className="text-[14px] font-extrabold mb-3">⚡ تفاصيل المباراة</div>
+      {live.length > 0 && (
+        <div className="mb-3">
+          <div className="text-[12px] font-extrabold text-t2 mb-2">🔴 جارية الآن</div>
+          {live.map((m) => (
+            <Link
+              key={m.id}
+              to={`/match/${m.id}/live`}
+              className="flex items-center gap-3 bg-s1 border border-warn/40 rounded-2xl p-3 mb-2"
+            >
+              <span className="w-1.5 self-stretch rounded-full bg-warn" />
+              <div className="flex-1 min-w-0">
+                <div className="text-[13px] font-extrabold truncate">
+                  {clubName || 'فريقك'} <span className="text-t3 font-normal">vs</span> {m.opponentName}
+                </div>
+                <MatchMeta match={m} competitions={competitions} />
+              </div>
+              <span className="text-[15px] font-black shrink-0">
+                {countSetWins(m.setWinners, 'A')}:{countSetWins(m.setWinners, 'B')}
+              </span>
+              <span className="text-[10px] font-extrabold text-warn shrink-0">▶ متابعة</span>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {scheduled.length > 0 && (
+        <div className="mb-3">
+          <div className="text-[12px] font-extrabold text-t2 mb-2">🗓 القادمة</div>
+          {scheduled.map((m) => (
+            <div key={m.id} className="flex items-center gap-3 bg-s1 border border-bd rounded-2xl p-3 mb-2">
+              <div className="flex-1 min-w-0">
+                <div className="text-[13px] font-extrabold truncate">
+                  {clubName || 'فريقك'} <span className="text-t3 font-normal">vs</span> {m.opponentName}
+                </div>
+                <MatchMeta match={m} competitions={competitions} />
+              </div>
+              <Link to={`/match/${m.id}/start`} className="px-3 py-1.5 bg-ok text-white rounded-lg text-[11px] font-extrabold shrink-0">
+                ▶ ابدأ الآن
+              </Link>
+              <button
+                onClick={() => confirm('إلغاء هذه المباراة المجدولة؟') && deleteMatch(m.id)}
+                className="w-7 h-7 rounded bg-err/10 text-err text-xs flex items-center justify-center shrink-0"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="bg-s1 border border-bd rounded-2xl p-4">
+        <div className="text-[14px] font-extrabold mb-3">➕ مباراة جديدة</div>
 
         {competitions.length > 0 && (
           <>
@@ -119,33 +173,6 @@ export function SetupScreen() {
         >
           📅 إضافة المباراة
         </button>
-      </div>
-
-      <div className="bg-s1 border border-bd rounded-2xl p-4">
-        <div className="text-[14px] font-extrabold mb-3">🗓 المباريات المجدولة ({scheduled.length})</div>
-        {scheduled.length === 0 ? (
-          <p className="text-[12px] text-t3">لا توجد مباريات مجدولة بعد — أضف واحدة بالأعلى.</p>
-        ) : (
-          scheduled.map((m) => (
-            <div key={m.id} className="flex items-center gap-3 bg-bg border border-bd rounded-2xl p-3 mb-2 last:mb-0">
-              <div className="flex-1 min-w-0">
-                <div className="text-[13px] font-extrabold truncate">
-                  {clubName || 'فريقك'} <span className="text-t3 font-normal">vs</span> {m.opponentName}
-                </div>
-                <MatchMeta match={m} competitions={competitions} />
-              </div>
-              <Link to={`/match/${m.id}/start`} className="px-3 py-1.5 bg-ok text-white rounded-lg text-[11px] font-extrabold shrink-0">
-                ▶ ابدأ الآن
-              </Link>
-              <button
-                onClick={() => confirm('إلغاء هذه المباراة المجدولة؟') && deleteMatch(m.id)}
-                className="w-7 h-7 rounded bg-err/10 text-err text-xs flex items-center justify-center shrink-0"
-              >
-                ✕
-              </button>
-            </div>
-          ))
-        )}
       </div>
     </div>
   )
