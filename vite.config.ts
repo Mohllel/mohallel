@@ -9,6 +9,8 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      /** التسجيل يدوي عبر useRegisterSW بالتطبيق نفسه لعرض تنبيه "يتوفر تحديث" بدل الاعتماد على تحديث صامت */
+      injectRegister: false,
       includeAssets: ['icons/icon-192.svg', 'icons/icon-512.svg'],
       manifest: {
         id: '/',
