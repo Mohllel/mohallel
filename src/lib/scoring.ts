@@ -1,15 +1,16 @@
 import type { Match, Quality, RotationSlot, ServeType, SkillKey, TeamSide } from '../types/domain'
 
-/** المهارات التي تُنهي الكرة لصالح مُنفّذها عند تقييم ممتاز */
+/** المهارات التي قد تُنهي الكرة فوراً بنقطة — لمنفّذها عند تقييم أعلى، أو للفريق الآخر عند تقييم أدنى */
 const POINT_SKILLS: SkillKey[] = ['S', 'SS', 'B']
 
 export const otherSide = (side: TeamSide): TeamSide => (side === 'A' ? 'B' : 'A')
 
 /**
  * يحدد إن كان إجراء مسجَّل يستحق نقطة تلقائية، ولمن، بالنسبة للفريق الذي نفّذ الإجراء.
- * خطأ (F) أو إرسال ضائع = نقطة للفريق الآخر دائماً. تقييم ممتاز على هجوم/إرسال/بلوك
- * (ومنها الإرسال المباشر الذي يُضبط تلقائياً على ممتاز) = نقطة لمنفّذ الإجراء.
- * غير ذلك: كرة متداولة، تسجيل فقط بلا نقطة.
+ * خطأ (F) أو إرسال ضائع = نقطة للفريق الآخر دائماً. على هجوم/إرسال/بلوك تحديداً:
+ * تقييم "ممتاز جداً" = نقطة لمنفّذ الإجراء (ضربة قاتلة/إرسال مباشر/حائط ساحق)،
+ * وتقييم "ضعيف" = نقطة للفريق الآخر (خطأ هجوم/إرسال/بلوك ينتهي بالكرة خارجاً أو بالشبكة).
+ * غير ذلك (جيد/ممتاز على هذه المهارات، أو أي تقييم على بقية المهارات): كرة متداولة، تسجيل فقط بلا نقطة.
  */
 export function pointSideForAction(
   actingSide: TeamSide,
@@ -18,7 +19,10 @@ export function pointSideForAction(
   serveType?: ServeType,
 ): TeamSide | null {
   if (skill === 'F' || serveType === 'error') return otherSide(actingSide)
-  if (quality === 3 && POINT_SKILLS.includes(skill)) return actingSide
+  if (POINT_SKILLS.includes(skill)) {
+    if (quality === 3) return actingSide
+    if (quality === 0) return otherSide(actingSide)
+  }
   return null
 }
 

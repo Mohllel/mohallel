@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { sideBySideLayout } from '../../constants/courtPositions'
+import { otherSide } from '../../lib/scoring'
 import { useClubStore } from '../../store/useClubStore'
 import { useMatchesStore } from '../../store/useMatchesStore'
 import { useMatchPlayers } from '../../lib/useMatchPlayers'
-import type { Player, RotationPosition, TeamSide } from '../../types/domain'
+import type { Player, RotationPosition, SkillKey, TeamSide } from '../../types/domain'
 import { BenchStrip } from './BenchStrip'
 import { CourtZoneOverlay } from './CourtZoneOverlay'
 import { PlayerCircle } from './PlayerCircle'
+import { PointTagPrompt } from './PointTagPrompt'
 import { RotationEditor } from './RotationEditor'
 
 interface CourtMapProps {
@@ -18,17 +20,20 @@ interface CourtMapProps {
 export function CourtMap({ matchId, paused }: CourtMapProps) {
   const ownPlayers = useMatchPlayers(matchId)
   const match = useMatchesStore((s) => s.matches[matchId])
-  const { getRotation, assignRotation, rotateLineup, logPointAtZone, substitutePlayer } = useMatchesStore()
+  const { getRotation, assignRotation, rotateLineup, logPointAtZone, substitutePlayer, tagPointAction } =
+    useMatchesStore()
   const { clubName, isPro, opponentRosters, addOpponentPlayer } = useClubStore()
 
   const [rotationOpen, setRotationOpen] = useState(false)
   const [addOpponentAt, setAddOpponentAt] = useState<RotationPosition | null>(null)
   const [benchSelection, setBenchSelection] = useState<{ side: TeamSide; playerId: string } | null>(null)
   const [flash, setFlash] = useState<{ side: TeamSide; key: number } | null>(null)
+  const [tagPrompt, setTagPrompt] = useState<{ side: TeamSide; zone: number } | null>(null)
   const flashKeyRef = useRef(0)
   const prevScoreRef = useRef<{ a: number; b: number } | null>(null)
 
   const ownName = clubName || 'فريقك'
+  const opponentName = match?.opponentName || 'المنافس'
 
   useEffect(() => {
     if (!match) return
@@ -65,6 +70,13 @@ export function CourtMap({ matchId, paused }: CourtMapProps) {
   const handleZoneTap = (landedInSide: TeamSide, zone: number) => {
     if (paused) return
     logPointAtZone(matchId, landedInSide, zone)
+    setTagPrompt({ side: otherSide(landedInSide), zone })
+  }
+
+  const handleTagPoint = (playerId: string, skill: SkillKey) => {
+    if (!tagPrompt) return
+    tagPointAction(matchId, { side: tagPrompt.side, playerId, skill, quality: 3, zone: tagPrompt.zone })
+    setTagPrompt(null)
   }
 
   const handleCircleClick = (side: TeamSide, position: RotationPosition) => {
@@ -188,6 +200,20 @@ export function CourtMap({ matchId, paused }: CourtMapProps) {
           onClose={() => setAddOpponentAt(null)}
         />
       )}
+
+      {tagPrompt &&
+        (() => {
+          const onCourtIds = new Set(rotation(tagPrompt.side).map((s) => s.playerId).filter(Boolean))
+          const onCourtPlayers = playersBySide(tagPrompt.side).filter((p) => onCourtIds.has(p.id))
+          return (
+            <PointTagPrompt
+              scoringName={tagPrompt.side === 'A' ? ownName : opponentName}
+              players={onCourtPlayers}
+              onTag={handleTagPoint}
+              onDismiss={() => setTagPrompt(null)}
+            />
+          )
+        })()}
     </div>
   )
 }
