@@ -60,7 +60,7 @@ export function LiveScreen() {
       <ModeToggle matchId={id} />
       <MatchControlBar matchId={id} />
 
-      {match.mode === 'grid' && <GridMode matchId={id} paused={!!match.paused} onRequestQuality={requestQuality} />}
+      {match.mode === 'grid' && <GridMode matchId={id} paused={!!match.paused} />}
       {match.mode === 'quick' && <QuickMode matchId={id} paused={!!match.paused} onRequestQuality={requestQuality} />}
       {match.mode === 'court' && <CourtMap matchId={id} paused={!!match.paused} />}
 
